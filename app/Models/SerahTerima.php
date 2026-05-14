@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class SerahTerima extends Model
 {
     protected $guarded = ['id'];
+    protected $table = 'serah_terimas';
 
     protected function casts(): array
     {

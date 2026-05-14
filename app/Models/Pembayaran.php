@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pembayaran extends Model
 {
     protected $guarded = ['id'];
+    protected $table = 'pembayarans';
 
     protected function casts(): array
     {

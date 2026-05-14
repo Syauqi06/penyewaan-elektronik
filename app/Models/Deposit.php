@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Deposit extends Model
 {
     protected $guarded = ['id'];
+    protected $table = 'deposits';
 
     protected function casts(): array
     {

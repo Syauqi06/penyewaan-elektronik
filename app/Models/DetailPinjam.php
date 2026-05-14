@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DetailPinjam extends Model
 {
     protected $guarded = ['id'];
+    protected $table = 'detail_pinjams';
 
     public function peminjaman()
     {
