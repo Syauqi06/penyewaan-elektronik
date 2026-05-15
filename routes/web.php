@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\KatalogController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -21,5 +22,7 @@ Route::middleware('auth')->group(function () {
 // Rute Google Login
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.login');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
+
+Route::get('/', [KatalogController::class, 'index'])->name('home');
 
 require __DIR__.'/auth.php';
