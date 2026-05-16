@@ -67,9 +67,12 @@
                         
                         <div class="mt-4 flex items-center justify-between">
                             <span class="text-lg font-extrabold text-indigo-600">Rp {{ number_format($barang->harga_sewa_perhari, 0, ',', '.') }}<span class="text-sm font-normal text-gray-500">/hari</span></span>
-                            <a href="#" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                                Sewa
-                            </a>
+                            <form action="{{ route('checkout.store', $barang->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                    Sewa
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

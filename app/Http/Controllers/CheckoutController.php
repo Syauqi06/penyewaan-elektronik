@@ -53,4 +53,48 @@ class CheckoutController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function store(Request $request, int $barang_id)
+    {
+        // 1. Ambil data barang
+        $barang = \App\Models\Barang::findOrFail($barang_id);
+
+        // Validasi sederhana (hardcode 1 hari sewa untuk testing, nanti bisa dinamis dari form)
+        $hari_sewa = 1; 
+        $total_biaya = $barang->harga_sewa_perhari * $hari_sewa;
+
+        // 2. Buat data Peminjaman
+        $peminjaman = \App\Models\Peminjaman::create([
+            'user_id' => Auth::id(),
+            'tanggal_pinjam' => now(),
+            'tanggal_kembali_rencana' => now()->addDays($hari_sewa),
+            'total_biaya_sewa' => $total_biaya,
+            'sisa_pembayaran' => $total_biaya,
+            'status' => 'menunggu_pembayaran',
+        ]);
+
+        // 3. Buat Detail Pinjam
+        \App\Models\DetailPinjam::create([
+            'peminjaman_id' => $peminjaman->id,
+            'barang_id' => $barang->id,
+            'jumlah' => 1,
+            'harga_sewa_satuan' => $barang->harga_sewa_perhari,
+            'subtotal' => $total_biaya,
+        ]);
+
+        // Redirect ke halaman pembayaran
+        return redirect()->route('checkout.bayar', $peminjaman->id);
+    }
+
+    public function halamanBayar(int $peminjaman_id)
+    {
+        $peminjaman = \App\Models\Peminjaman::with('detailPinjams.barang')->findOrFail($peminjaman_id);
+        
+        // Cek jika status bukan menunggu pembayaran, lempar ke dashboard
+        if($peminjaman->status !== 'menunggu_pembayaran'){
+            return redirect('/dashboard')->with('error', 'Pesanan ini sudah diproses.');
+        }
+
+        return view('checkout.bayar', compact('peminjaman'));
+    }
 }
