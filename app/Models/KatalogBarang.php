@@ -7,5 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class KatalogBarang extends Model
 {
-    use HasFactory;
+    protected $table = 'katalog_barang';
+    protected $guarded = ['id'];
+
+    public function kategori()
+    {
+        return $this->belongsTo(Kategori::class);
+    }
+
+    public function unit_barangs()
+    {
+        return $this->hasMany(UnitBarang::class);
+    }
 }
