@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('serah_terima', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('peminjaman_id')->constrained('peminjaman')->onDelete('cascade');
+            $table->dateTime('tanggal_serah_terima');
+            $table->enum('jenis', ['pengambilan', 'pengembalian']); // Membedakan 2 kali proses tanda tangan
+            $table->string('tanda_tangan_user'); // Menyimpan path file gambar tanda tangan (.png)
+            $table->text('catatan')->nullable();
             $table->timestamps();
         });
     }

@@ -11,8 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('alamat_users', function (Blueprint $table) {
+        Schema::create('alamat_user', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('label_alamat'); // Contoh: Rumah, Kantor
+            $table->string('provinsi');
+            $table->string('kota_kabupaten');
+            $table->string('kecamatan');
+            $table->string('kode_pos');
+            $table->text('detail_alamat');
+            $table->boolean('is_utama')->default(false); // Untuk menandai alamat default
             $table->timestamps();
         });
     }

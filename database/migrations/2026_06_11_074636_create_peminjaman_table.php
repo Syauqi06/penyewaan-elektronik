@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('peminjaman', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('alamat_user_id')->constrained('alamat_user'); // Wajib diisi untuk kurir 100% online
+            $table->date('tanggal_pesan');
+            $table->date('tanggal_kembali_rencana');
+            $table->bigInteger('total_biaya_sewa');
+            $table->bigInteger('jumlah_dp');
+            $table->bigInteger('jumlah_deposit'); // Deposit jaminan yang ditahan selama masa sewa
+            $table->enum('status_peminjaman', ['pending', 'disetujui', 'ditolak', 'aktif', 'selesai'])->default('pending');
             $table->timestamps();
         });
     }

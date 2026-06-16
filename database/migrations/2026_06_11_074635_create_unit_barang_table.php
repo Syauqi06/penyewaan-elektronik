@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('unit_barang', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('katalog_barang_id')->constrained('katalog_barang')->onDelete('cascade');
+            $table->string('serial_number')->unique();
+            $table->string('kondisi_fisik');
+            $table->enum('status_ketersediaan', ['tersedia', 'disewa', 'perawatan'])->default('tersedia');
             $table->timestamps();
         });
     }

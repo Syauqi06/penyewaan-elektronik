@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('katalog_barang', function (Blueprint $table) {
+        Schema::create('detail_peminjaman', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kategori_id')->constrained('kategori')->onDelete('cascade');
-            $table->string('nama_barang');
-            $table->string('foto_barang')->nullable();
-            $table->text('deskripsi');
-            $table->bigInteger('harga_sewa_per_hari');
+            $table->foreignId('peminjaman_id')->constrained('peminjaman')->onDelete('cascade');
+            $table->foreignId('unit_barang_id')->constrained('unit_barang');
+            $table->bigInteger('harga_sewa_satuan'); // Mengunci harga saat transaksi terjadi
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('katalog_barang');
+        Schema::dropIfExists('detail_peminjaman');
     }
 };
