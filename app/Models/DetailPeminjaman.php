@@ -7,5 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class DetailPeminjaman extends Model
 {
-    use HasFactory;
+    protected $table = 'detail_peminjaman';
+    protected $guarded = ['id'];
+
+    public function peminjaman()
+    {
+        return $this->belongsTo(Peminjaman::class);
+    }
+
+    public function unit_barang()
+    {
+        return $this->belongsTo(UnitBarang::class);
+    }
 }

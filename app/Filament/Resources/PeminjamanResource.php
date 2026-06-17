@@ -129,7 +129,7 @@ class PeminjamanResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\DetailPeminjamansRelationManager::class,
         ];
     }
 
