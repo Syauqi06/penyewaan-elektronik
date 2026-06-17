@@ -53,4 +53,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Peminjaman::class);
     }
+
+    public function verifikasi_identitas()
+    {
+        return $this->hasOne(VerifikasiIdentitas::class);
+    }
 }
