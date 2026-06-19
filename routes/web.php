@@ -35,6 +35,8 @@ Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 Route::get('/', [KatalogController::class, 'index'])->name('katalog.index');
+Route::get('/kategori', [KatalogController::class, 'kategori'])->name('kategori.index');
+Route::get('/katalog/{id}', [KatalogController::class, 'show'])->name('katalog.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/sewa/{katalog}', [PemesananController::class, 'create'])->name('booking.create');
