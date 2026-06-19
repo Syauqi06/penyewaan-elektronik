@@ -41,9 +41,14 @@ class KatalogBarangResource extends Resource
                     ->required()
                     ->numeric()
                     ->prefix('Rp'),
+                TextInput::make('harga_asli')
+                    ->label('Harga Asli Barang)')
+                    ->required()
+                    ->numeric()
+                    ->prefix('Rp'),
                 FileUpload::make('foto_barang')
                     ->image()
-                    ->directory('foto-katalog') // Gambar akan disimpan di storage/app/public/foto-katalog
+                    ->directory('foto-katalog')
                     ->columnSpanFull(),
                 Textarea::make('deskripsi')
                     ->required()

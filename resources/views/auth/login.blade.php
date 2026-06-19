@@ -33,6 +33,15 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
+            <a href="{{ route('google.login') }}" class="w-full inline-flex justify-center items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                <svg class="w-4 h-4 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 19">
+                    <path fill-rule="evenodd" d="M8.842 18.083a8.8 8.8 0 0 1-8.65-8.948 8.841 8.841 0 0 1 8.8-8.652h.153a8.439 8.439 0 0 1 5.8 2.212l-2.193 2.193a5.614 5.614 0 0 0-3.76-1.258 5.485 5.485 0 0 0-5.352 5.518 5.495 5.495 0 0 0 5.466 5.525c3.084 0 4.673-1.636 5.253-3.66h-5.25v-2.73h8.21c.08.435.122.883.122 1.334 0 4.962-3.327 8.441-8.318 8.441Z" clip-rule="evenodd"/>
+                </svg>
+                Log in with Google
+            </a>
+        </div>
+        
+        <div class="flex items-center justify-end mt-4">
             @if (Route::has('password.request'))
                 <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
                     {{ __('Forgot your password?') }}
