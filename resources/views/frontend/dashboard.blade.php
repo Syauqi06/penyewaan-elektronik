@@ -54,8 +54,7 @@
                     @if(!$verifikasi)
                         <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-md">Belum Diverifikasi</span>
                         <p class="text-xs text-gray-500 mt-2">Anda wajib upload KTP untuk bisa menyewa.</p>
-                        <button class="mt-3 w-full bg-blue-50 text-blue-700 font-semibold py-2 rounded-lg text-sm">Upload KTP Sekarang</button>
-                    @elseif($verifikasi->status == 'pending')
+                            <a href="{{ route('ktp.upload') }}" class="mt-3 w-full bg-blue-50 text-blue-700 font-semibold py-2 rounded-lg text-sm block text-center hover:bg-blue-100 transition">Upload KTP Sekarang</a>                    @elseif($verifikasi->status == 'pending')
                         <span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-700 text-xs font-bold px-2.5 py-1 rounded-md">Menunggu Pengecekan Admin</span>
                     @elseif($verifikasi->status == 'disetujui')
                         <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-md">Terverifikasi</span>

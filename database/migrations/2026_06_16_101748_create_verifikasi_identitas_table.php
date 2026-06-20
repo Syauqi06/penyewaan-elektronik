@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('foto_ktp');
             $table->enum('status', ['pending', 'disetujui', 'ditolak'])->default('pending');
-            $table->text('catatan')->nullable(); // Alasan jika KTP ditolak (misal: buram)
+            $table->text('catatan')->nullable();
             $table->timestamps();
         });
     }

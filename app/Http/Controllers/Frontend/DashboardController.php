@@ -47,4 +47,41 @@ class DashboardController extends Controller
 
         return redirect()->back()->with('success', 'Alamat berhasil ditambahkan!');
     }
+
+    public function uploadKtp()
+    {
+        $user = Auth::user();
+        $verifikasi = $user->verifikasi_identitas;
+
+        // Jika sudah disetujui atau pending, jangan izinkan upload ulang
+        if ($verifikasi && in_array($verifikasi->status, ['pending', 'disetujui'])) {
+            return redirect()->route('dashboard')->with('success', 'KTP Anda sedang diproses atau sudah disetujui.');
+        }
+
+        return view('frontend.upload-ktp', compact('user'));
+    }
+
+    // Menyimpan file KTP ke storage
+    public function storeKtp(Request $request)
+    {
+        $request->validate([
+            // Validasi file harus berupa gambar dengan ukuran maksimal 2MB
+            'foto_ktp' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
+        ]);
+
+        // Simpan gambar ke folder storage/app/public/ktp
+        $path = $request->file('foto_ktp')->store('ktp', 'public');
+
+        // Simpan atau update ke database
+        \App\Models\VerifikasiIdentitas::updateOrCreate(
+            ['user_id' => Auth::id()],
+            [
+                'foto_ktp' => $path,
+                'status' => 'pending',
+                'catatan' => null // Kosongkan catatan penolakan sebelumnya jika ada
+            ]
+        );
+
+        return redirect()->route('dashboard')->with('success', 'KTP berhasil diunggah! Mohon tunggu verifikasi dari Admin.');
+    }
 }
