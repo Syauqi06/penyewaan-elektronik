@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $katalog->nama_barang }} - SewaElektronik</title>
+    <title>{{ $katalog->nama_barang }} - Rental.ly</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 text-gray-800">
 
     <nav class="bg-white shadow-sm py-4 px-8 flex justify-between items-center border-b border-gray-100">
-        <h1 class="text-xl font-bold text-blue-700">SewaElektronik</h1>
+        <h1 class="text-xl font-bold text-blue-700">Rental.ly</h1>
         <div class="text-sm font-medium space-x-6 text-gray-600 hidden md:inline-flex">
             <a href="{{ route('katalog.index') }}" class="hover:text-blue-600">Katalog</a>
             <a href="#" class="hover:text-blue-600">Bantuan</a>
@@ -33,14 +33,14 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
             <div class="lg:col-span-2 space-y-6">
-                <div class="bg-gray-100 rounded-2xl aspect-video flex items-center justify-center overflow-hidden relative">
+                <div class="bg-white border border-gray-100 rounded-2xl aspect-video flex items-center justify-center overflow-hidden relative shadow-sm">
                     <span class="absolute top-4 left-4 bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">
                         Stok: {{ $katalog->stok_tersedia }} Unit
                     </span>
                     @if($katalog->foto_barang)
                         <img src="{{ asset('storage/' . $katalog->foto_barang) }}" alt="{{ $katalog->nama_barang }}" class="w-full h-full object-contain p-8">
                     @else
-                        <span class="text-gray-400">Tanpa Gambar</span>
+                        <span class="text-gray-400 font-medium">Tanpa Gambar</span>
                     @endif
                 </div>
 
@@ -65,20 +65,26 @@
                         </div>
                     </div>
 
-                    <form action="#" method="GET">
+                    @if($errors->any())
+                        <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-4 text-sm font-bold shadow-sm">
+                            {{ $errors->first() }}
+                        </div>
+                    @endif
+
+                    <form action="{{ route('booking.create', $katalog->id) }}" method="GET">
                         <p class="text-sm font-semibold text-gray-900 mb-2">Durasi Sewa</p>
                         <div class="grid grid-cols-2 gap-3 mb-6">
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1">Tanggal Mulai</label>
-                                <input type="date" id="tgl_pesan" class="w-full text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                <input type="date" id="tgl_pesan" name="tgl_pesan" class="w-full text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1">Tanggal Selesai</label>
-                                <input type="date" id="tgl_kembali" class="w-full text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required disabled>
+                                <input type="date" id="tgl_kembali" name="tgl_kembali" class="w-full text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
                             </div>
                         </div>
 
-                        <div class="space-y-3 text-sm text-gray-600 mb-6">
+                        <div class="space-y-3 text-sm text-gray-600 mb-6 bg-blue-50/50 p-4 rounded-xl border border-blue-50">
                             <div class="flex justify-between">
                                 <span>Biaya Sewa (<span id="text_durasi">0 Hari</span>)</span>
                                 <span id="text_total_sewa" class="font-medium text-gray-900">Rp 0</span>
@@ -87,11 +93,11 @@
                                 <span>Deposit Jaminan (Aman)</span>
                                 <span id="text_deposit" class="font-medium text-gray-900">Rp 0</span>
                             </div>
-                            <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
-                                <span class="font-bold text-gray-900">Total Bayar Awal</span>
+                            <div class="pt-3 border-t border-blue-100 flex justify-between items-center mt-2">
+                                <span class="font-bold text-gray-900">Estimasi Total Awal</span>
                                 <span id="text_dp" class="text-lg font-bold text-blue-600">Rp 0</span>
                             </div>
-                            <p class="text-[10px] text-gray-400 text-right">*Total bayar termasuk DP Sewa 50% & Deposit</p>
+                            <p class="text-[10px] text-gray-400 text-right mt-1">*Total estimasi termasuk DP Sewa 50% & Deposit</p>
                         </div>
 
                         @if($katalog->stok_tersedia > 0)
@@ -120,25 +126,40 @@
         const tglKembali = document.getElementById('tgl_kembali');
         const hargaPerHari = parseInt(document.getElementById('hargaPerHari').getAttribute('data-harga'));
         const hargaAsliBarang = parseInt(document.getElementById('hargaPerHari').getAttribute('data-harga-asli'));
-        const deposit = hargaAsliBarang * 0.3; // Deposit 30%
+        const deposit = hargaAsliBarang * 0.3; 
 
+        // Gembok input manual dari keyboard
+        tglPesan.addEventListener('keydown', (e) => e.preventDefault());
+        tglKembali.addEventListener('keydown', (e) => e.preventDefault());
+        
+        // Format Rupiah
         const formatRupiah = (angka) => {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         }
 
+        // Tampilkan Deposit Awal dan set minimal tanggal mulai (Hari Ini)
         const today = new Date().toISOString().split('T')[0];
         tglPesan.setAttribute('min', today);
         document.getElementById('text_deposit').innerText = formatRupiah(deposit);
 
+        // Atur Gembok Tanggal Selesai otomatis setiap kali Tanggal Mulai dipilih
         tglPesan.addEventListener('change', function() {
-            tglKembali.disabled = false;
-            let minKembali = new Date(this.value);
-            minKembali.setDate(minKembali.getDate() + 1);
-            tglKembali.setAttribute('min', minKembali.toISOString().split('T')[0]);
-            tglKembali.value = ''; 
-            hitungBiaya();
+            if(this.value) {
+                let minKembali = new Date(this.value);
+                minKembali.setDate(minKembali.getDate() + 1); // H+1 minimal
+                
+                let minKembaliStr = minKembali.toISOString().split('T')[0];
+                tglKembali.setAttribute('min', minKembaliStr);
+                
+                // Hapus data tanggal selesai jika ternyata lebih kecil dari tanggal mulai
+                if(tglKembali.value && tglKembali.value <= this.value) {
+                    tglKembali.value = ''; 
+                }
+                hitungBiaya();
+            }
         });
 
+        // Trigger perhitungan saat tanggal kembali dipilih
         tglKembali.addEventListener('change', hitungBiaya);
 
         function hitungBiaya() {
@@ -152,7 +173,7 @@
                 if(diffDays > 0) {
                     const totalSewa = diffDays * hargaPerHari;
                     const jumlahDp = totalSewa * 0.5; // DP 50%
-                    const totalBayarSekarang = jumlahDp + deposit;
+                    const totalBayarSekarang = jumlahDp + deposit; // Total tagihan awal
 
                     document.getElementById('text_durasi').innerText = diffDays + ' Hari';
                     document.getElementById('text_total_sewa').innerText = formatRupiah(totalSewa);

@@ -51,7 +51,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/alamat', [DashboardController::class, 'storeAlamat'])->name('alamat.store');
     
     // Route form booking yang sebelumnya kita buat (biarkan tetap ada)
-    Route::get('/sewa/{katalog}', [App\Http\Controllers\Frontend\PemesananController::class, 'create'])->name('booking.create');
+    Route::get('/sewa/{katalog}', [PemesananController::class, 'create'])->name('booking.create');
 
     Route::get('/dashboard/verifikasi', [DashboardController::class, 'uploadKtp'])->name('ktp.upload');
     Route::post('/dashboard/verifikasi', [DashboardController::class, 'storeKtp'])->name('ktp.store');

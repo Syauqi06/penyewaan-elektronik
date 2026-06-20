@@ -9,15 +9,27 @@ use Illuminate\Support\Facades\Auth;
 
 class PemesananController extends Controller
 {
-    public function create(KatalogBarang $katalog)
+    public function create(Request $request, int $id)
     {
-        $stokTersedia = $katalog->unit_barangs()->where('status_ketersediaan', 'tersedia')->count();
-        if ($stokTersedia < 1) {
-            return redirect()->route('katalog.index')->with('error', 'Maaf, stok barang sedang kosong.');
+        $katalog = KatalogBarang::findOrFail($id);
+        
+        // Ambil data user, alamat, dan KTP
+        $user = Auth::user();
+        $alamats = $user->alamat_users; 
+        $verifikasi = $user->verifikasi_identitas;
+
+        // Tangkap request tanggal dari halaman detail jika ada
+        $tglPesan = $request->query('tgl_pesan');
+        $tglKembali = $request->query('tgl_kembali');
+
+        if (!$tglPesan || !$tglKembali) {
+            return redirect()->back()->withErrors(['pesan' => 'Mohon lengkapi Tanggal Mulai dan Tanggal Selesai penyewaan.']);
         }
 
-        $alamats = Auth::user()->alamat_users;
+        if (strtotime($tglKembali) <= strtotime($tglPesan)) {
+            return redirect()->back()->withErrors(['pesan' => 'Durasi sewa minimal adalah 1 hari']);
+        }
 
-        return view('frontend.booking', compact('katalog', 'alamats'));
+        return view('frontend.booking', compact('katalog', 'alamats', 'verifikasi', 'tglPesan', 'tglKembali'));
     }
 }

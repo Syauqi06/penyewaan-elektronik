@@ -32,30 +32,39 @@
                 <form action="#" method="POST" class="space-y-5">
                     @csrf
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Alamat Pengiriman Kurir</label>
-                        @if($alamats->count() > 0)
-                            <select name="alamat_user_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                                <option value="">-- Pilih Alamat --</option>
-                                @foreach($alamats as $alamat)
-                                    <option value="{{ $alamat->id }}">{{ $alamat->label_alamat }} - {{ $alamat->detail_alamat }}</option>
-                                @endforeach
-                            </select>
-                        @else
-                            <div class="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                                Anda belum memiliki alamat. <a href="#" class="font-bold underline">Tambah Alamat</a>
-                            </div>
-                        @endif
-                    </div>
+                    <div class="mb-6">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Alamat Pengiriman Kurir</label>
+                            
+                            @if($alamats->count() > 0)
+                                <select name="alamat_id" class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white" required>
+                                    @foreach($alamats as $alamat)
+                                        <option value="{{ $alamat->id }}">
+                                            {{ $alamat->label_alamat }} - {{ \Illuminate\Support\Str::limit($alamat->detail_alamat, 50) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <div class="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+                                    <span>Anda belum memiliki alamat.</span>
+                                    <a href="{{ route('dashboard') }}" class="font-bold underline hover:text-red-800">Tambah Alamat</a>
+                                </div>
+                            @endif
+                        </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai Sewa</label>
-                            <input type="date" id="tgl_pesan" name="tanggal_pesan" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai Sewa</label>
+                            <input type="date" name="tgl_pesan" id="tgl_pesan" 
+                                value="{{ $tglPesan ?? '' }}" 
+                                class="w-full text-sm border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" 
+                                required readonly>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Rencana Kembali</label>
-                            <input type="date" id="tgl_kembali" name="tanggal_kembali_rencana" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required disabled>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Rencana Kembali</label>
+                            <input type="date" name="tgl_kembali" id="tgl_kembali" 
+                                value="{{ $tglKembali ?? '' }}" 
+                                class="w-full text-sm border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" 
+                                required readonly>
                         </div>
                     </div>
 
@@ -82,66 +91,91 @@
                         </div>
                     </div>
 
-                    <button type="button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition mt-4">
-                        Lanjutkan Pembayaran
-                    </button>
+                    <div class="mt-8">
+                            @if(!$verifikasi)
+                                <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-4 text-sm flex items-start gap-3">
+                                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <div>
+                                        <p class="font-bold">KTP Belum Diunggah</p>
+                                        <p class="mt-1">Anda wajib mengunggah KTP sebelum dapat melanjutkan penyewaan.</p>
+                                        <a href="{{ route('dashboard') }}" class="inline-block mt-2 font-bold text-red-700 underline">Upload KTP Sekarang</a>
+                                    </div>
+                                </div>
+                                <button type="button" disabled class="w-full bg-gray-300 text-gray-500 font-bold py-3.5 px-4 rounded-xl cursor-not-allowed">Lanjutkan Pembayaran</button>
+
+                            @elseif($verifikasi->status == 'pending')
+                                <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-xl mb-4 text-sm flex items-start gap-3">
+                                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div>
+                                        <p class="font-bold">Verifikasi KTP Sedang Diproses</p>
+                                        <p class="mt-1">Mohon tunggu admin menyetujui dokumen KTP Anda. Anda baru bisa menyewa setelah status disetujui.</p>
+                                    </div>
+                                </div>
+                                <button type="button" disabled class="w-full bg-gray-300 text-gray-500 font-bold py-3.5 px-4 rounded-xl cursor-not-allowed">Lanjutkan Pembayaran</button>
+
+                            @elseif($verifikasi->status == 'ditolak')
+                                <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-4 text-sm flex items-start gap-3">
+                                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    <div>
+                                        <p class="font-bold">Verifikasi KTP Ditolak</p>
+                                        <p class="mt-1">Alasan: {{ $verifikasi->catatan }}</p>
+                                        <a href="{{ route('dashboard') }}" class="inline-block mt-2 font-bold text-red-700 underline">Upload Ulang KTP</a>
+                                    </div>
+                                </div>
+                                <button type="button" disabled class="w-full bg-gray-300 text-gray-500 font-bold py-3.5 px-4 rounded-xl cursor-not-allowed">Lanjutkan Pembayaran</button>
+
+                            @else
+                                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-blue-700 transition duration-200 shadow-md shadow-blue-600/20">Lanjutkan Pembayaran</button>
+                            @endif
+                        </div>
                 </form>
             </div>
         </div>
     </div>
 
     <script>
-        const tglPesan = document.getElementById('tgl_pesan');
-        const tglKembali = document.getElementById('tgl_kembali');
-        const hargaPerHari = parseInt(document.getElementById('hargaPerHari').getAttribute('data-harga'));
-        const hargaAsliBarang = parseInt(document.getElementById('hargaPerHari').getAttribute('data-harga-asli'));
-        const deposit = hargaAsliBarang * 0.3;
+        // Ambil nilai tanggal yang sudah dilempar dari controller
+        const tglPesan = document.getElementById('tgl_pesan').value;
+        const tglKembali = document.getElementById('tgl_kembali').value;
+        
+        // Di halaman checkout, kita bisa langsung mengambil harga dari PHP/Blade agar lebih aman
+        const hargaPerHari = {{ $katalog->harga_sewa_per_hari }};
+        const hargaAsliBarang = {{ $katalog->harga_asli }};
+        const deposit = hargaAsliBarang * 0.3; // Deposit 30%
 
-        // Format Rupiah
         const formatRupiah = (angka) => {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         }
 
-        // Set minimal tanggal pesan adalah hari ini
-        const today = new Date().toISOString().split('T')[0];
-        tglPesan.setAttribute('min', today);
-
-        document.getElementById('text_deposit').innerText = formatRupiah(deposit);
-        tglPesan.addEventListener('change', function() {
-            tglKembali.disabled = false;
-            // Tanggal kembali minimal 1 hari setelah tanggal pesan
-            let minKembali = new Date(this.value);
-            minKembali.setDate(minKembali.getDate() + 1);
-            tglKembali.setAttribute('min', minKembali.toISOString().split('T')[0]);
-            tglKembali.value = ''; // Reset tanggal kembali jika tanggal pesan diubah
-            hitungBiaya();
-        });
-
-        tglKembali.addEventListener('change', hitungBiaya);
-
-        function hitungBiaya() {
-            if(tglPesan.value && tglKembali.value) {
-                const date1 = new Date(tglPesan.value);
-                const date2 = new Date(tglKembali.value);
+        function hitungBiayaOtomatis() {
+            if(tglPesan && tglKembali) {
+                const date1 = new Date(tglPesan);
+                const date2 = new Date(tglKembali);
                 
                 const diffTime = Math.abs(date2 - date1);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 
                 if(diffDays > 0) {
                     const totalSewa = diffDays * hargaPerHari;
-                    const jumlahDp = totalSewa * 0.5; // DP 50% dari biaya sewa
-                    const totalBayarSekarang = jumlahDp + deposit; // (50% Sewa) + Deposit 30% harga asli
+                    const jumlahDp = totalSewa * 0.5; // DP 50%
+                    const totalBayarSekarang = jumlahDp + deposit;
 
+                    // Update tampilan di layar
                     document.getElementById('text_durasi').innerText = diffDays + ' Hari';
                     document.getElementById('text_total_sewa').innerText = formatRupiah(totalSewa);
                     document.getElementById('text_dp').innerText = formatRupiah(totalBayarSekarang);
+                    
+                    // Update deposit (kalau Anda memberikan id='text_deposit' di HTML rincian biayanya)
+                    if(document.getElementById('text_deposit')) {
+                        document.getElementById('text_deposit').innerText = formatRupiah(deposit);
+                    }
                 }
-            } else {
-                document.getElementById('text_durasi').innerText = '0 Hari';
-                document.getElementById('text_total_sewa').innerText = 'Rp 0';
-                document.getElementById('text_dp').innerText = 'Rp 0';
             }
         }
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            hitungBiayaOtomatis();
+        });
     </script>
 </body>
 </html>
