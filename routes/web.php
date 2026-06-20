@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Frontend\KatalogController;
 use App\Http\Controllers\Frontend\PemesananController;
+use App\Http\Controllers\Frontend\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +41,17 @@ Route::get('/katalog/{id}', [KatalogController::class, 'show'])->name('katalog.s
 
 Route::middleware('auth')->group(function () {
     Route::get('/sewa/{katalog}', [PemesananController::class, 'create'])->name('booking.create');
+});
+
+Route::middleware(['auth'])->group(function () {
+    // Route Dashboard Utama Penyewa
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Route Simpan Alamat
+    Route::post('/dashboard/alamat', [DashboardController::class, 'storeAlamat'])->name('alamat.store');
+    
+    // Route form booking yang sebelumnya kita buat (biarkan tetap ada)
+    Route::get('/sewa/{katalog}', [App\Http\Controllers\Frontend\PemesananController::class, 'create'])->name('booking.create');
 });
 
 require __DIR__.'/auth.php';
