@@ -71,7 +71,8 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('booking.create', $katalog->id) }}" method="GET">
+                    <form action="{{ route('booking.init', $katalog->id) }}" method="POST">
+                        @csrf
                         <p class="text-sm font-semibold text-gray-900 mb-2">Durasi Sewa</p>
                         <div class="grid grid-cols-2 gap-3 mb-6">
                             <div>

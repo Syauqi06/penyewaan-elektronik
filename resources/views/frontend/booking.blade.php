@@ -29,7 +29,7 @@
             </div>
 
             <div class="w-full md:w-2/3">
-                <form action="#" method="POST" class="space-y-5">
+                <form action="{{ route('booking.store', $katalog->id) }}" method="POST" class="space-y-6">
                     @csrf
                     
                     <div class="mb-6">
