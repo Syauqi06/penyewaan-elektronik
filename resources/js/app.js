@@ -1,1 +1,1 @@
-import './bootstrap';
+import '/boostrap.js';

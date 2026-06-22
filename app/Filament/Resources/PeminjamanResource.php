@@ -40,7 +40,7 @@ class PeminjamanResource extends Resource
                         Select::make('user_id')
                             ->relationship('user', 'name')
                             ->label('Nama Penyewa')
-                            ->disabled() // Dikunci agar admin tidak bisa mengganti nama penyewa di tengah transaksi
+                            ->disabled()
                             ->required(),
                         Select::make('alamat_user_id')
                             ->relationship('alamat_user', 'label_alamat')
@@ -78,11 +78,11 @@ class PeminjamanResource extends Resource
                     ->schema([
                         Select::make('status_peminjaman')
                             ->options([
-                                'pending' => 'Menunggu Persetujuan',
+                                'pending'   => 'Menunggu Persetujuan',
                                 'disetujui' => 'Disetujui (Menunggu DP)',
-                                'ditolak' => 'Ditolak',
-                                'aktif' => 'Aktif (Barang Sedang Disewa)',
-                                'selesai' => 'Selesai (Barang Telah Kembali)',
+                                'ditolak'   => 'Ditolak',
+                                'aktif'     => 'Aktif (Barang Sedang Disewa)',
+                                'selesai'   => 'Selesai (Barang Telah Kembali)',
                             ])
                             ->required()
                             ->native(false),
@@ -112,11 +112,11 @@ class PeminjamanResource extends Resource
                 TextColumn::make('status_peminjaman')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'gray',
+                        'pending'   => 'gray',
                         'disetujui' => 'info',
-                        'ditolak' => 'danger',
-                        'aktif' => 'warning',
-                        'selesai' => 'success',
+                        'ditolak'   => 'danger',
+                        'aktif'     => 'warning',
+                        'selesai'   => 'success',
                     }),
             ])
             ->defaultSort('created_at', 'desc')
@@ -124,31 +124,41 @@ class PeminjamanResource extends Resource
                 //
             ])
             ->actions([
+                // =========================================================
+                // ACTION 1: SERAHKAN BARANG
+                // FIX: Tidak perlu closure di ->form(), langsung array biasa
+                // =========================================================
                 Action::make('serahkanBarang')
                     ->label('Serahkan Barang')
                     ->icon('heroicon-o-truck')
                     ->color('warning')
-                    // Cuma muncul kalau statusnya 'disetujui' (Sudah bayar DP)
-                    ->visible(fn ($record) => $record->status_peminjaman === 'disetujui') 
+                    ->visible(fn ($record) => $record->status_peminjaman === 'disetujui')
                     ->form([
                         FileUpload::make('foto_kondisi_awal')
                             ->label('Foto Kondisi Sebelum Disewakan')
                             ->directory('kondisi_awal')
                             ->image()
+                            ->imageEditor()
                             ->helperText('Upload foto bukti kondisi barang sebelum diserahkan ke penyewa.')
                             ->required(),
                     ])
                     ->action(function (array $data, $record): void {
-                        // Ubah status jadi aktif dan simpan foto awal
+                        // FIX: FileUpload di Filament v3 return array, ambil item pertama
+                        $foto = null;
+                        if (!empty($data['foto_kondisi_awal'])) {
+                            $foto = is_array($data['foto_kondisi_awal'])
+                                ? collect($data['foto_kondisi_awal'])->first()
+                                : $data['foto_kondisi_awal'];
+                        }
+
                         $record->update([
                             'status_peminjaman' => 'aktif',
-                            'foto_kondisi_awal' => $data['foto_kondisi_awal'],
+                            'foto_kondisi_awal' => $foto,
                         ]);
 
-                        // Ubah status ketersediaan unit barang jadi 'disewa'
                         foreach ($record->detail_peminjaman as $detail) {
                             if ($detail->unit_barang) {
-                                $detail->unit_barang->update(['status_ketersediaan' => 'disewa']); // Atau sesuaikan dengan enum lu
+                                $detail->unit_barang->update(['status_ketersediaan' => 'disewa']);
                             }
                         }
 
@@ -161,91 +171,109 @@ class PeminjamanResource extends Resource
                     ->modalHeading('Penyerahan Barang ke Penyewa')
                     ->modalWidth('md'),
 
+                // =========================================================
+                // ACTION 2: PROSES PENGEMBALIAN
+                // FIX UTAMA: Placeholder dengan $record harus pakai
+                // ->mountUsing() agar data ter-inject ke form state dulu,
+                // baru dibaca oleh field. Ini mencegah Alpine dispatchEvent error.
+                // =========================================================
                 Action::make('prosesPengembalian')
                     ->label('Terima Barang')
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
-                    // Tombol ini cuma muncul kalau statusnya lagi disewa (aktif)
-                    ->visible(fn ($record) => $record->status_peminjaman === 'aktif') 
+                    ->visible(fn ($record) => $record->status_peminjaman === 'aktif')
+                    // FIX: Inject data ke form state sebelum modal render
+                    ->mountUsing(function ($form, $record) {
+                        $tglRencana = Carbon::parse($record->tanggal_kembali_rencana);
+                        $tglAktual  = Carbon::now();
+                        $hariTelat  = $tglAktual->gt($tglRencana)
+                            ? (int) $tglAktual->diffInDays($tglRencana)
+                            : 0;
+
+                        // Pre-fill form state, bukan closure di dalam field
+                        $form->fill([
+                            'info_keterlambatan' => "Jadwal: {$tglRencana->format('d M Y')} | Aktual: {$tglAktual->format('d M Y')} | Telat: {$hariTelat} Hari",
+                            'denda_fisik'        => 0,
+                        ]);
+                    })
                     ->form([
-                        // 1. Info otomatis denda telat pakai Placeholder
-                        Placeholder::make('info_keterlambatan')
+                        // FIX: Pakai TextInput disabled, bukan Placeholder dengan closure $record
+                        // Placeholder dengan closure $record menyebabkan Alpine error di Filament v3
+                        TextInput::make('info_keterlambatan')
                             ->label('Log Keterlambatan (Otomatis)')
-                            ->content(function ($record) {
-                                $tglRencana = Carbon::parse($record->tanggal_kembali_rencana);
-                                $tglAktual = Carbon::now();
-                                $hariTelat = $tglAktual->gt($tglRencana) ? $tglAktual->diffInDays($tglRencana) : 0;
-                                
-                                return "Jadwal: {$tglRencana->format('d M Y')} | Aktual: {$tglAktual->format('d M Y')} | Telat: {$hariTelat} Hari";
-                            })
+                            ->disabled()
                             ->columnSpanFull(),
 
-                        // 2. Input Manual Admin
                         Textarea::make('kondisi_barang_kembali')
                             ->label('Kondisi Fisik Barang')
                             ->required(),
+
                         TextInput::make('denda_fisik')
                             ->label('Denda Kerusakan (Rp)')
                             ->numeric()
                             ->default(0)
                             ->helperText('Isi 0 jika tidak ada cacat/kerusakan baru.')
                             ->required(),
+
                         FileUpload::make('foto_kondisi_kembali')
                             ->label('Upload Foto Bukti')
                             ->directory('pengembalian')
                             ->image()
+                            ->imageEditor()
                             ->nullable(),
+
                         Textarea::make('catatan')
                             ->label('Catatan Opsional')
                             ->nullable(),
                     ])
                     ->action(function (array $data, $record): void {
-                        // LOGIKA BACKEND DIEKSEKUSI DI SINI PAS TOMBOL SUBMIT DIKLIK
+                        $tglRencana        = Carbon::parse($record->tanggal_kembali_rencana);
+                        $tglAktual         = Carbon::now();
+                        $hariTelat         = $tglAktual->gt($tglRencana)
+                            ? (int) $tglAktual->diffInDays($tglRencana)
+                            : 0;
+                        $tarifDendaPerHari = 50000;
+                        $totalDendaTelat   = $hariTelat * $tarifDendaPerHari;
+                        $totalDendaAkhir   = $totalDendaTelat + (int) $data['denda_fisik'];
 
-                        // 1. Kalkulasi Ulang Telat
-                        $tglRencana = Carbon::parse($record->tanggal_kembali_rencana);
-                        $tglAktual = Carbon::now();
-                        $hariTelat = $tglAktual->gt($tglRencana) ? $tglAktual->diffInDays($tglRencana) : 0;
-                        
-                        $tarifDendaPerHari = 50000; // Bisa disesuaikan
-                        $totalDendaTelat = $hariTelat * $tarifDendaPerHari;
-                        $totalDendaAkhir = $totalDendaTelat + $data['denda_fisik'];
+                        // FIX: Handle FileUpload nullable + bisa return array
+                        $fotoKembali = null;
+                        if (!empty($data['foto_kondisi_kembali'])) {
+                            $fotoKembali = is_array($data['foto_kondisi_kembali'])
+                                ? collect($data['foto_kondisi_kembali'])->first()
+                                : $data['foto_kondisi_kembali'];
+                        }
 
-                        // 2. Simpan ke Tabel Pengembalian
                         Pengembalian::create([
-                            'peminjaman_id' => $record->id,
+                            'peminjaman_id'          => $record->id,
                             'tanggal_kembali_aktual' => $tglAktual->format('Y-m-d'),
                             'kondisi_barang_kembali' => $data['kondisi_barang_kembali'],
-                            'foto_kondisi_kembali' => $data['foto_kondisi_kembali'],
-                            'jumlah_hari_telat' => $hariTelat,
-                            'tarif_denda_per_hari' => $tarifDendaPerHari,
-                            'total_denda' => $totalDendaAkhir,
-                            'status_denda' => $totalDendaAkhir > 0 ? 'belum_bayar' : 'tidak_ada',
-                            'catatan' => $data['catatan'],
+                            'foto_kondisi_kembali'   => $fotoKembali,
+                            'jumlah_hari_telat'      => $hariTelat,
+                            'tarif_denda_per_hari'   => $tarifDendaPerHari,
+                            'total_denda'            => $totalDendaAkhir,
+                            'status_denda'           => $totalDendaAkhir > 0 ? 'belum_bayar' : 'tidak_ada',
+                            'catatan'                => $data['catatan'] ?? null,
                         ]);
 
-                        // 3. Update Status Peminjaman
                         $record->update(['status_peminjaman' => 'selesai']);
 
-                        // 4. Bebaskan Unit Barang
                         foreach ($record->detail_peminjaman as $detail) {
                             if ($detail->unit_barang) {
                                 $detail->unit_barang->update(['status_ketersediaan' => 'tersedia']);
                             }
                         }
 
-                        // 5. Kirim Notifikasi Sukses ke Layar Admin
                         Notification::make()
                             ->title('Barang Berhasil Dikembalikan!')
                             ->success()
                             ->body('Unit barang sekarang sudah tersedia untuk disewa kembali.')
                             ->send();
                     })
-                    ->requiresConfirmation() // Opsional: Bikin popup konfirmasi "Are you sure?"
+                    ->requiresConfirmation(false) // FIX: Matikan dulu, konfirmasi + modal form bisa konflik
                     ->modalHeading('Proses Pengembalian Barang')
                     ->modalWidth('2xl'),
             ])
-
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
@@ -263,9 +291,9 @@ class PeminjamanResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPeminjamen::route('/'),
+            'index'  => Pages\ListPeminjamen::route('/'),
             'create' => Pages\CreatePeminjaman::route('/create'),
-            'edit' => Pages\EditPeminjaman::route('/{record}/edit'),
+            'edit'   => Pages\EditPeminjaman::route('/{record}/edit'),
         ];
     }
 
