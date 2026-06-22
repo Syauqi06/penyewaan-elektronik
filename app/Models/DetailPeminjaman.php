@@ -17,6 +17,6 @@ class DetailPeminjaman extends Model
 
     public function unit_barang()
     {
-        return $this->belongsTo(UnitBarang::class);
+        return $this->belongsTo(UnitBarang::class, 'unit_barang_id');
     }
 }

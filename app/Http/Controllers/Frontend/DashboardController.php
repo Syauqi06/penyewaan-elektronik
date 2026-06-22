@@ -12,16 +12,16 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
-        $alamats = $user->alamat_users;
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $alamats = $user->alamat_users; 
         $verifikasi = $user->verifikasi_identitas;
-
+        
         $peminjamans = Peminjaman::with(['detail_peminjaman.unit_barang.katalog_barang', 'pembayaran'])
                         ->where('user_id', $user->id)
                         ->latest('tanggal_pesan')
                         ->get();
 
-        return view('frontend.dashboard', compact('user', 'alamats', 'verifikasi'));
+        return view('frontend.dashboard', compact('user', 'alamats', 'verifikasi', 'peminjamans'));
     }
 
     // Menyimpan alamat baru

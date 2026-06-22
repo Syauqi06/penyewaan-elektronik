@@ -29,6 +29,17 @@
             </div>
 
             <div class="w-full md:w-2/3">
+
+                @if ($errors->any())
+                            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 shadow-sm">
+                                <p class="font-bold mb-1">Terjadi Kesalahan:</p>
+                                <ul class="list-disc list-inside text-sm">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                 <form action="{{ route('booking.store', $katalog->id) }}" method="POST" class="space-y-6">
                     @csrf
                     

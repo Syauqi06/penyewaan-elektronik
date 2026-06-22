@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Saya - Rental.ly</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <script type="text/javascript"
+            src="https://app.sandbox.midtrans.com/snap/snap.js"
+            data-client-key="{{ config('midtrans.client_key') }}"></script>
 </head>
 <body class="bg-slate-50 text-gray-800 font-sans antialiased">
 
@@ -39,7 +43,7 @@
             <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl mb-8 flex items-start gap-3 shadow-sm">
                 <svg class="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <div>
-                    <p class="font-bold mb-1">Gagal menyimpan data:</p>
+                    <p class="font-bold mb-1">Gagal memproses data:</p>
                     <ul class="list-disc list-inside text-sm space-y-1">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -70,16 +74,12 @@
                         
                         @if(!$verifikasi)
                             <div class="bg-red-50 border border-red-100 p-4 rounded-2xl">
-                                <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full mb-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    Belum Verifikasi
-                                </span>
+                                <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full mb-2">Belum Verifikasi</span>
                                 <p class="text-xs text-gray-600 mb-4 leading-relaxed">Anda wajib mengunggah KTP sebelum dapat menyewa barang.</p>
                                 <a href="{{ route('ktp.upload') }}" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm block text-center transition shadow-md shadow-blue-600/20">Upload KTP Sekarang</a>
                             </div>
                         @elseif($verifikasi->status == 'pending')
                             <div class="bg-yellow-50 border border-yellow-100 p-4 rounded-2xl flex items-start gap-3">
-                                <svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <div>
                                     <span class="text-yellow-800 text-sm font-bold block mb-1">Diproses Admin</span>
                                     <span class="text-xs text-yellow-700 leading-relaxed">Dokumen sedang dicek, mohon tunggu sebentar.</span>
@@ -87,9 +87,6 @@
                             </div>
                         @elseif($verifikasi->status == 'disetujui')
                             <div class="bg-green-50 border border-green-100 p-4 rounded-2xl flex items-center gap-3">
-                                <div class="bg-green-200 text-green-700 p-1.5 rounded-full">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                </div>
                                 <div>
                                     <span class="text-green-800 text-sm font-bold block">Terverifikasi</span>
                                     <span class="text-xs text-green-600">Akun siap digunakan.</span>
@@ -109,20 +106,17 @@
             <div class="lg:col-span-2 space-y-8">
                 
                 <div class="bg-white p-7 md:p-9 rounded-3xl shadow-sm border border-gray-100">
-                    <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
-                        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
-                            <div class="bg-indigo-100 p-2 rounded-xl text-indigo-600">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                            </div>
-                            Riwayat Pesanan
-                        </h2>
-                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Riwayat Pesanan</h2>
 
                     @if(isset($peminjamans) && $peminjamans->count() > 0)
                         <div class="space-y-5">
                             @foreach($peminjamans as $pinjam)
-                                <div class="border border-gray-100 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition duration-300 bg-white hover:border-blue-200">
-                                    
+                                @php
+                                    // Ambil data pembayaran DP/Deposit yang mengandung Token Midtrans
+                                    $tagihanAwal = $pinjam->pembayaran->where('jenis_pembayaran', 'tagihan_awal')->first();
+                                @endphp
+                                
+                                <div class="border border-gray-100 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition duration-300 bg-white">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-3 mb-3">
                                             <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md">ID: #{{ str_pad($pinjam->id, 5, '0', STR_PAD_LEFT) }}</span>
@@ -133,7 +127,7 @@
                                             @foreach($pinjam->detail_peminjaman as $detail)
                                                 @php
                                                     $namaBarang = $detail->unit_barang->katalog_barang->nama_barang ?? 'Barang tidak diketahui';
-                                                    $durasi = \Carbon\Carbon::parse($detail->tanggal_mulai)->diffInDays(\Carbon\Carbon::parse($detail->tanggal_selesai));
+                                                    $durasi = \Carbon\Carbon::parse($pinjam->tanggal_pesan)->diffInDays(\Carbon\Carbon::parse($pinjam->tanggal_kembali_rencana));
                                                 @endphp
                                                 <li class="text-sm font-semibold text-gray-800 flex items-center gap-2">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
@@ -155,9 +149,9 @@
                                             {{ strtoupper($pinjam->status_peminjaman) }}
                                         </span>
                                         
-                                        @if($pinjam->status_peminjaman == 'pending')
-                                            <button class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-6 rounded-xl transition shadow-md shadow-blue-600/20">
-                                                Upload Bukti Bayar
+                                        @if($pinjam->status_peminjaman == 'pending' && $tagihanAwal && $tagihanAwal->snap_token)
+                                            <button onclick="payWithMidtrans('{{ $tagihanAwal->snap_token }}')" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-6 rounded-xl transition shadow-md shadow-blue-600/20">
+                                                Bayar Sekarang
                                             </button>
                                         @else
                                             <a href="#" class="text-sm font-bold text-gray-600 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 px-5 py-2.5 rounded-xl transition">Detail Pesanan</a>
@@ -169,9 +163,6 @@
                         </div>
                     @else
                         <div class="text-center py-12 px-4 border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50/50">
-                            <div class="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
-                                <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            </div>
                             <p class="text-gray-900 font-bold mb-1">Belum ada pesanan</p>
                             <p class="text-sm text-gray-500 mb-5">Yuk jelajahi katalog dan mulai menyewa barang incaranmu!</p>
                             <a href="{{ route('katalog.index') }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition">Lihat Katalog</a>
@@ -263,6 +254,27 @@
     </div>
 
     <script>
+        // --- 1. SCRIPT MIDTRANS ---
+        function payWithMidtrans(snapToken) {
+            window.snap.pay(snapToken, {
+                onSuccess: function(result){
+                    alert("Pembayaran berhasil diproses Midtrans!"); 
+                    window.location.reload(); 
+                },
+                onPending: function(result){
+                    alert("Silakan selesaikan pembayaran Anda."); 
+                    window.location.reload();
+                },
+                onError: function(result){
+                    alert("Pembayaran gagal!");
+                },
+                onClose: function(){
+                    alert('Anda menutup popup sebelum menyelesaikan pembayaran.');
+                }
+            });
+        }
+
+        // --- 2. SCRIPT API ALAMAT EMSIFA ---
         const endpoint = 'https://www.emsifa.com/api-wilayah-indonesia/api';
 
         const selProvinsi = document.getElementById('provinsi');

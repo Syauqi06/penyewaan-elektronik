@@ -11,10 +11,10 @@ use App\Models\Pembayaran;
 use App\Models\UnitBarang;
 use App\Models\Peminjaman;
 use App\Models\DetailPeminjaman;
+use Midtrans\Config;
 
 class PemesananController extends Controller
 {
-
     public function initBooking(Request $request, int $id)
     {
         $request->validate([
@@ -63,7 +63,7 @@ class PemesananController extends Controller
 
         $katalog = KatalogBarang::findOrFail($id);
 
-        // 2. CARI UNIT BARANG FISIK YANG TERSEDIA
+        // 2. Cari unit barang fisik yang tersedia
         $unitBarang = UnitBarang::where('katalog_barang_id', $katalog->id)
                             ->where('status_ketersediaan', 'tersedia')
                             ->first();
@@ -87,8 +87,7 @@ class PemesananController extends Controller
         $dpSewa = $totalSewa * 0.5;
         $totalTagihanAwal = $dpSewa + $deposit;
 
-
-        // 4. Simpan ke Tabel PEMINJAMAN (Nota Induk)
+        // 4. Simpan ke Tabel Peminjaman (Nota Induk)
         $peminjaman = Peminjaman::create([
             'user_id' => Auth::id(),
             'alamat_user_id' => $request->alamat_id,
@@ -100,32 +99,69 @@ class PemesananController extends Controller
             'status_peminjaman' => 'pending',
         ]);
 
-        // 5. Simpan ke Tabel DETAIL PEMINJAMAN (Anak)
+        // 5. Simpan ke Tabel Detail Peminjaman
         DetailPeminjaman::create([
             'peminjaman_id' => $peminjaman->id,
             'unit_barang_id' => $unitBarang->id,
-            'tanggal_mulai' => $tglPesan->format('Y-m-d'),
-            'tanggal_selesai' => $tglKembali->format('Y-m-d'),
-            'harga_sewa_harian' => $katalog->harga_sewa_per_hari,
-            'subtotal' => $totalSewa,
+            'harga_sewa_satuan' => $katalog->harga_sewa_per_hari,
         ]);
 
-        // 6. Buat Tagihan di Tabel PEMBAYARAN (Agar user bisa upload bukti TF)
-        Pembayaran::create([
-            'peminjaman_id' => $peminjaman->id,
-            'jumlah_bayar' => $totalTagihanAwal,
-            'metode_pembayaran' => 'transfer', // default
-            'status_pembayaran' => 'belum_dibayar', // Sesuaikan enum lu
-        ]);
+        // 6. Integrasi Midtrans API & Request Snap Token
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
 
-        // 7. Kunci (Booking) Unit Barang tersebut!
+        // Bikin ID transaksi gateway unik untuk Midtrans
+        $orderId = 'RENT-' . $peminjaman->id . '-' . time();
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => (int) $totalTagihanAwal,
+            ],
+            'customer_details' => [
+                'first_name' => Auth::user()->name,
+                'email' => Auth::user()->email,
+            ],
+            'item_details' => [
+                [
+                    'id' => $katalog->id,
+                    'price' => (int) $totalTagihanAwal,
+                    'quantity' => 1,
+                    'name' => 'Tagihan Awal - ' . substr($katalog->nama_barang, 0, 30),
+                ]
+            ]
+        ];
+
+        try {
+            // Ambil Token dari Midtrans
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+            // Buat data tagihan di tabel Pembayaran dengan snap_token
+            Pembayaran::create([
+                'peminjaman_id' => $peminjaman->id,
+                'jumlah_bayar' => $totalTagihanAwal,
+                'jenis_pembayaran' => 'tagihan_awal',
+                'kode_transaksi_gateway' => $orderId,
+                'snap_token' => $snapToken,
+                'status_pembayaran' => 'pending',
+            ]);
+
+        } catch (\Exception $e) {
+            // Jika API Midtrans bermasalah, hapus instansi peminjaman agar tidak gantung, lalu tampilkan error
+            $peminjaman->delete();
+            return redirect()->back()->withErrors(['pesan' => 'Gagal menghubungkan ke payment gateway Midtrans: ' . $e->getMessage()]);
+        }
+
+        // 7. Kunci (Booking) Unit Barang tersebut agar statusnya berubah
         $unitBarang->update([
             'status_ketersediaan' => 'disewa'
         ]);
 
-        // Bersihkan session
+        // Bersihkan session data booking tanggal
         session()->forget(['booking_tgl_pesan', 'booking_tgl_kembali']);
 
-        return redirect()->route('dashboard')->with('success', 'Hore! Pesanan berhasil dibuat. Silakan cek tagihan pembayaran Anda.');
+        return redirect()->route('dashboard')->with('success', 'Hore! Pesanan berhasil dibuat. Silakan cek dashboard Anda untuk menyelesaikan pembayaran.');
     }
 }

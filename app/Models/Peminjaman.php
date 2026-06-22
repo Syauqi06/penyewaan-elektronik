@@ -20,8 +20,13 @@ class Peminjaman extends Model
         return $this->belongsTo(AlamatUser::class);
     }
 
-    public function detail_peminjamans()
+    public function detail_peminjaman()
     {
-        return $this->hasMany(DetailPeminjaman::class);
+        return $this->hasMany(DetailPeminjaman::class, 'peminjaman_id');
+    }
+
+    public function pembayaran()
+    {
+        return $this->hasMany(Pembayaran::class, 'peminjaman_id');
     }
 }
