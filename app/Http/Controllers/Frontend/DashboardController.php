@@ -127,4 +127,13 @@ class DashboardController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'KTP berhasil diunggah! Mohon tunggu verifikasi dari Admin.');
     }
+
+    public function showPesanan(int $id)
+    {
+        $pesanan = Peminjaman::with(['detail_peminjaman.unit_barang.katalog_barang', 'pembayaran', 'alamat_user'])
+                    ->where('user_id', Auth::id())
+                    ->findOrFail($id);
+
+        return view('frontend.detail-pesanan', compact('pesanan'));
+    }
 }

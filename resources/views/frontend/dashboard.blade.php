@@ -154,8 +154,7 @@
                                                 Bayar Sekarang
                                             </button>
                                         @else
-                                            <a href="#" class="text-sm font-bold text-gray-600 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 px-5 py-2.5 rounded-xl transition">Detail Pesanan</a>
-                                        @endif
+                                            <a href="{{ route('pesanan.show', $pinjam->id) }}" class="text-sm font-bold text-gray-600 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 px-5 py-2.5 rounded-xl transition">Detail Pesanan</a>                                        @endif
                                     </div>
 
                                 </div>

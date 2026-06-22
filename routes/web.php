@@ -40,6 +40,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Dashboard Utama Penyewa
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/pesanan/{id}', [DashboardController::class, 'showPesanan'])->name('pesanan.show');
     
     // Manajemen Alamat & Verifikasi KTP
     Route::post('/dashboard/alamat', [DashboardController::class, 'storeAlamat'])->name('alamat.store');
