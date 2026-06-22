@@ -15,10 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('peminjaman_id')->constrained('peminjaman')->onDelete('cascade');
             $table->bigInteger('jumlah_bayar');
-            $table->enum('jenis_pembayaran', ['dp', 'pelunasan', 'deposit', 'denda']);
-            $table->string('metode_pembayaran')->nullable(); // Diisi otomatis dari response Midtrans
-            $table->string('kode_transaksi_gateway')->nullable(); // Order ID / Transaction ID Midtrans
-            $table->string('status_pembayaran')->default('pending'); // pending, settlement, expire, deny
+            
+            $table->enum('jenis_pembayaran', ['tagihan_awal', 'pelunasan', 'denda']); 
+            
+            $table->string('metode_pembayaran')->nullable(); 
+            $table->string('kode_transaksi_gateway')->nullable(); // Order ID Midtrans
+            $table->string('snap_token')->nullable(); // Token untuk manggil popup Midtrans
+            $table->dateTime('tanggal_bayar')->nullable(); // Tanggal user lunas bayar
+            $table->string('status_pembayaran')->default('pending'); // pending, settlement, expire, cancel
+            
             $table->timestamps();
         });
     }
