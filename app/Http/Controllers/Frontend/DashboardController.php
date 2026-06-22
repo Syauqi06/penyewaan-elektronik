@@ -12,14 +12,54 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $user = \Illuminate\Support\Facades\Auth::user();
+        $user = Auth::user();
+        
         $alamats = $user->alamat_users; 
         $verifikasi = $user->verifikasi_identitas;
-        
-        $peminjamans = Peminjaman::with(['detail_peminjaman.unit_barang.katalog_barang', 'pembayaran'])
+
+        $peminjamans = \App\Models\Peminjaman::with(['detail_peminjaman.unit_barang.katalog_barang', 'pembayaran'])
                         ->where('user_id', $user->id)
                         ->latest('tanggal_pesan')
                         ->get();
+
+        \Midtrans\Config::$serverKey = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+
+        foreach ($peminjamans as $pinjam) {
+            // Kita cuma ngecek pesanan yang statusnya masih 'pending'
+            if ($pinjam->status_peminjaman == 'pending') {
+                $tagihanAwal = $pinjam->pembayaran->where('jenis_pembayaran', 'tagihan_awal')->first();
+
+                // Pastikan ada Order ID (kode_transaksi_gateway)
+                if ($tagihanAwal && $tagihanAwal->kode_transaksi_gateway) {
+                    try {
+                        // Laravel NANYA LANGSUNG ke server Midtrans
+                        $midtransStatus = (object) \Midtrans\Transaction::status($tagihanAwal->kode_transaksi_gateway);
+
+                        // Kalau jawaban Midtrans adalah LUNAS (Settlement/Capture)
+                        if ($midtransStatus->transaction_status == 'settlement' || $midtransStatus->transaction_status == 'capture') {
+                            
+                            // 1. Update tabel pembayaran di database kita
+                            $tagihanAwal->update([
+                                'status_pembayaran' => 'settlement',
+                                'metode_pembayaran' => $midtransStatus->payment_type ?? 'transfer',
+                                'tanggal_bayar' => \Carbon\Carbon::now()
+                            ]);
+
+                            // 2. Update status peminjaman di database kita jadi disetujui
+                            $pinjam->update([
+                                'status_peminjaman' => 'disetujui'
+                            ]);
+
+                            // 3. Ubah variabel sementara biar view HTML-nya langsung berubah tanpa reload 2x
+                            $pinjam->status_peminjaman = 'disetujui';
+                        }
+                    } catch (\Exception $e) {
+                        // Abaikan kalau API Midtrans lagi error atau order belum masuk ke server mereka
+                    }
+                }
+            }
+        }
 
         return view('frontend.dashboard', compact('user', 'alamats', 'verifikasi', 'peminjamans'));
     }
