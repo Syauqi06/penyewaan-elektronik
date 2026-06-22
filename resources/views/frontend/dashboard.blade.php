@@ -6,134 +6,258 @@
     <title>Dashboard Saya - Rental.ly</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-50 text-gray-800">
+<body class="bg-slate-50 text-gray-800 font-sans antialiased">
 
-    <nav class="bg-white shadow-sm py-4 px-8 flex justify-between items-center border-b border-gray-100">
-        <a href="{{ route('katalog.index') }}" class="text-xl font-bold text-blue-700">Rental.ly</a>
-        <div class="flex items-center gap-4">
-            <a href="{{ route('katalog.index') }}" class="text-sm font-medium text-gray-600 hover:text-blue-600">Kembali ke Katalog</a>
-            <form method="POST" action="{{ route('logout') }}">
+    <nav class="bg-white shadow-sm py-4 px-6 md:px-10 flex justify-between items-center border-b border-gray-200 sticky top-0 z-50">
+        <a href="{{ route('katalog.index') }}" class="text-2xl font-black text-blue-700 tracking-tight">Rental<span class="text-blue-400">.ly</span></a>
+        <div class="flex items-center gap-6">
+            <a href="{{ route('katalog.index') }}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition">Kembali ke Katalog</a>
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
                 @csrf
-                <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-800">Logout</button>
+                <button type="submit" class="text-sm font-bold bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 px-4 py-2 rounded-lg transition">Logout</button>
             </form>
         </div>
     </nav>
 
-    <div class="max-w-5xl mx-auto px-4 py-10">
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold text-gray-900">Halo, {{ $user->name }}!</h2>
-            <p class="text-gray-500">Kelola akun, alamat pengiriman, dan riwayat sewa Anda di sini.</p>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        
+        <div class="mb-8 md:flex md:items-center md:justify-between">
+            <div>
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Halo, {{ $user->name }}! 👋</h2>
+                <p class="text-gray-500 mt-2 text-sm md:text-base">Kelola akun, alamat pengiriman, dan pantau riwayat sewa Anda di sini.</p>
+            </div>
         </div>
 
         @if(session('success'))
-            <div class="bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-                {{ session('success') }}
+            <div class="bg-green-50 border border-green-200 text-green-700 px-5 py-4 rounded-xl mb-8 flex items-start gap-3 shadow-sm">
+                <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="font-medium mt-0.5">{{ session('success') }}</div>
             </div>
         @endif
 
         @if ($errors->any())
-            <div class="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-                <p class="font-bold mb-1">Gagal menyimpan data:</p>
-                <ul class="list-disc list-inside text-sm">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+            <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl mb-8 flex items-start gap-3 shadow-sm">
+                <svg class="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div>
+                    <p class="font-bold mb-1">Gagal menyimpan data:</p>
+                    <ul class="list-disc list-inside text-sm space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         @endif
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <div class="md:col-span-1 space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-900 mb-4">Informasi Akun</h3>
-                    <p class="text-sm text-gray-500 mb-1">Email</p>
-                    <p class="font-medium mb-4">{{ $user->email }}</p>
-                    <p class="text-sm text-gray-500 mb-1">Status Verifikasi KTP</p>
+            <div class="lg:col-span-1 space-y-8">
+                <div class="bg-white p-7 rounded-3xl shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
+                        <div class="bg-blue-100 p-2.5 rounded-full text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg">Informasi Akun</h3>
+                    </div>
                     
-                    @if(!$verifikasi)
-                        <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-md">Belum Diverifikasi</span>
-                        <p class="text-xs text-gray-500 mt-2">Anda wajib upload KTP untuk bisa menyewa.</p>
-                            <a href="{{ route('ktp.upload') }}" class="mt-3 w-full bg-blue-50 text-blue-700 font-semibold py-2 rounded-lg text-sm block text-center hover:bg-blue-100 transition">Upload KTP Sekarang</a>                    @elseif($verifikasi->status == 'pending')
-                        <span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-700 text-xs font-bold px-2.5 py-1 rounded-md">Menunggu Pengecekan Admin</span>
-                    @elseif($verifikasi->status == 'disetujui')
-                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-md">Terverifikasi</span>
-                    @else
-                        <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-md">Verifikasi Ditolak</span>
-                        <p class="text-xs text-red-500 mt-1">{{ $verifikasi->catatan }}</p>
-                    @endif
+                    <div class="mb-6">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Email Terdaftar</p>
+                        <p class="font-medium text-gray-800">{{ $user->email }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Status Identitas (KTP)</p>
+                        
+                        @if(!$verifikasi)
+                            <div class="bg-red-50 border border-red-100 p-4 rounded-2xl">
+                                <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full mb-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    Belum Verifikasi
+                                </span>
+                                <p class="text-xs text-gray-600 mb-4 leading-relaxed">Anda wajib mengunggah KTP sebelum dapat menyewa barang.</p>
+                                <a href="{{ route('ktp.upload') }}" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm block text-center transition shadow-md shadow-blue-600/20">Upload KTP Sekarang</a>
+                            </div>
+                        @elseif($verifikasi->status == 'pending')
+                            <div class="bg-yellow-50 border border-yellow-100 p-4 rounded-2xl flex items-start gap-3">
+                                <svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <div>
+                                    <span class="text-yellow-800 text-sm font-bold block mb-1">Diproses Admin</span>
+                                    <span class="text-xs text-yellow-700 leading-relaxed">Dokumen sedang dicek, mohon tunggu sebentar.</span>
+                                </div>
+                            </div>
+                        @elseif($verifikasi->status == 'disetujui')
+                            <div class="bg-green-50 border border-green-100 p-4 rounded-2xl flex items-center gap-3">
+                                <div class="bg-green-200 text-green-700 p-1.5 rounded-full">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                                <div>
+                                    <span class="text-green-800 text-sm font-bold block">Terverifikasi</span>
+                                    <span class="text-xs text-green-600">Akun siap digunakan.</span>
+                                </div>
+                            </div>
+                        @else
+                            <div class="bg-red-50 border border-red-100 p-4 rounded-2xl">
+                                <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full mb-2">Ditolak</span>
+                                <p class="text-xs text-red-600 font-medium mb-3">Alasan: {{ $verifikasi->catatan }}</p>
+                                <a href="{{ route('ktp.upload') }}" class="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-2 rounded-xl text-sm block text-center transition">Upload Ulang</a>
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
 
-            <div class="md:col-span-2 space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-900 mb-4">Daftar Alamat Pengiriman</h3>
-                    
-                    @if($alamats->count() > 0)
-                        <div class="space-y-4 mb-6">
-                            @foreach($alamats as $alamat)
-                                <div class="border border-gray-200 p-4 rounded-xl flex justify-between items-start">
-                                    <div>
-                                        <span class="bg-gray-100 text-gray-800 text-xs font-bold px-2 py-1 rounded mb-2 inline-block">{{ $alamat->label_alamat }}</span>
-                                        <p class="text-sm text-gray-600">{{ $alamat->detail_alamat }}</p>
+            <div class="lg:col-span-2 space-y-8">
+                
+                <div class="bg-white p-7 md:p-9 rounded-3xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+                        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                            <div class="bg-indigo-100 p-2 rounded-xl text-indigo-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                            </div>
+                            Riwayat Pesanan
+                        </h2>
+                    </div>
+
+                    @if(isset($peminjamans) && $peminjamans->count() > 0)
+                        <div class="space-y-5">
+                            @foreach($peminjamans as $pinjam)
+                                <div class="border border-gray-100 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition duration-300 bg-white hover:border-blue-200">
+                                    
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md">ID: #{{ str_pad($pinjam->id, 5, '0', STR_PAD_LEFT) }}</span>
+                                            <span class="text-xs font-medium text-gray-500">{{ \Carbon\Carbon::parse($pinjam->tanggal_pesan)->format('d M Y') }}</span>
+                                        </div>
+                                        
+                                        <ul class="space-y-1.5 mb-4">
+                                            @foreach($pinjam->detail_peminjaman as $detail)
+                                                @php
+                                                    $namaBarang = $detail->unit_barang->katalog_barang->nama_barang ?? 'Barang tidak diketahui';
+                                                    $durasi = \Carbon\Carbon::parse($detail->tanggal_mulai)->diffInDays(\Carbon\Carbon::parse($detail->tanggal_selesai));
+                                                @endphp
+                                                <li class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                                    {{ $namaBarang }} <span class="text-gray-400 font-normal">({{ $durasi }} Hari)</span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+
+                                        <p class="font-bold text-blue-600 text-lg">Rp {{ number_format($pinjam->jumlah_dp + $pinjam->jumlah_deposit, 0, ',', '.') }}</p>
                                     </div>
+
+                                    <div class="w-full md:w-auto flex flex-col items-start md:items-end border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
+                                        <span class="inline-flex px-3 py-1.5 rounded-full text-xs font-bold mb-4
+                                            {{ $pinjam->status_peminjaman == 'pending' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                                            {{ $pinjam->status_peminjaman == 'disetujui' || $pinjam->status_peminjaman == 'selesai' ? 'bg-green-100 text-green-700' : '' }}
+                                            {{ $pinjam->status_peminjaman == 'aktif' ? 'bg-blue-100 text-blue-700' : '' }}
+                                            {{ $pinjam->status_peminjaman == 'ditolak' ? 'bg-red-100 text-red-700' : '' }}
+                                        ">
+                                            {{ strtoupper($pinjam->status_peminjaman) }}
+                                        </span>
+                                        
+                                        @if($pinjam->status_peminjaman == 'pending')
+                                            <button class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-6 rounded-xl transition shadow-md shadow-blue-600/20">
+                                                Upload Bukti Bayar
+                                            </button>
+                                        @else
+                                            <a href="#" class="text-sm font-bold text-gray-600 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 px-5 py-2.5 rounded-xl transition">Detail Pesanan</a>
+                                        @endif
+                                    </div>
+
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-6 bg-gray-50 rounded-xl mb-6 border border-dashed border-gray-300">
-                            <p class="text-gray-500 text-sm">Belum ada alamat yang ditambahkan.</p>
+                        <div class="text-center py-12 px-4 border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50/50">
+                            <div class="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
+                                <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            </div>
+                            <p class="text-gray-900 font-bold mb-1">Belum ada pesanan</p>
+                            <p class="text-sm text-gray-500 mb-5">Yuk jelajahi katalog dan mulai menyewa barang incaranmu!</p>
+                            <a href="{{ route('katalog.index') }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition">Lihat Katalog</a>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="bg-white p-7 md:p-9 rounded-3xl shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
+                        <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg">Daftar Alamat Pengiriman</h3>
+                    </div>
+                    
+                    @if($alamats->count() > 0)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                            @foreach($alamats as $alamat)
+                                <div class="border border-gray-200 p-5 rounded-2xl relative hover:border-blue-300 transition group bg-white">
+                                    <span class="absolute top-4 right-4 bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-md">{{ $alamat->label_alamat }}</span>
+                                    <svg class="w-6 h-6 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                                    <p class="text-sm text-gray-600 leading-relaxed pr-10">{{ $alamat->detail_alamat }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-8 bg-gray-50 rounded-2xl mb-8 border border-dashed border-gray-300">
+                            <p class="text-gray-500 text-sm">Belum ada alamat pengiriman yang disimpan.</p>
                         </div>
                     @endif
 
-                    <hr class="border-gray-100 mb-6">
-                    <h4 class="font-bold text-sm text-gray-900 mb-3">+ Tambah Alamat Baru</h4>
-                    <form action="{{ route('alamat.store') }}" method="POST">
-                        @csrf
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Label Alamat (cth: Rumah)</label>
-                                <input type="text" name="label_alamat" class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-gray-100">
+                        <h4 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Tambah Alamat Baru
+                        </h4>
+                        <form action="{{ route('alamat.store') }}" method="POST">
+                            @csrf
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Label Alamat</label>
+                                    <input type="text" name="label_alamat" placeholder="Cth: Rumah, Kantor" class="w-full text-sm border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm" required>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Kode Pos</label>
+                                    <input type="number" name="kode_pos" placeholder="Cth: 12345" class="w-full text-sm border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm" required>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Kode Pos</label>
-                                <input type="number" name="kode_pos" class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Provinsi</label>
+                                    <select id="provinsi" name="provinsi" class="w-full text-sm border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm" required>
+                                        <option value="">Pilih Provinsi</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Kota / Kabupaten</label>
+                                    <select id="kota" name="kota_kabupaten" class="w-full text-sm border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm disabled:bg-gray-100 disabled:cursor-not-allowed" required disabled>
+                                        <option value="">Pilih Kota/Kabupaten</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Kecamatan</label>
+                                    <select id="kecamatan" name="kecamatan" class="w-full text-sm border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm disabled:bg-gray-100 disabled:cursor-not-allowed" required disabled>
+                                        <option value="">Pilih Kecamatan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Kelurahan</label>
+                                    <select id="kelurahan" name="kelurahan" class="w-full text-sm border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm disabled:bg-gray-100 disabled:cursor-not-allowed" required disabled>
+                                        <option value="">Pilih Kelurahan</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Provinsi</label>
-                                <select id="provinsi" name="provinsi" class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                                    <option value="">Pilih Provinsi</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Kota / Kabupaten</label>
-                                <select id="kota" name="kota_kabupaten" class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50" required disabled>
-                                    <option value="">Pilih Kota/Kabupaten</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Kecamatan</label>
-                                <select id="kecamatan" name="kecamatan" class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50" required disabled>
-                                    <option value="">Pilih Kecamatan</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Kelurahan / Desa</label>
-                                <select id="kelurahan" name="kelurahan" class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50" required disabled>
-                                    <option value="">Pilih Kelurahan</option>
-                                </select>
-                            </div>
-                        </div>
 
-                        <div class="mb-4">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Detail Jalan & Patokan</label>
-                            <textarea name="detail_alamat" rows="3" class="w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required placeholder="Nama Jalan, RT/RW, Patokan gedung..."></textarea>
-                        </div>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg text-sm transition shadow-md">Simpan Alamat</button>
-                    </form>
+                            <div class="mb-6">
+                                <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Detail Jalan & Patokan</label>
+                                <textarea name="detail_alamat" rows="3" class="w-full text-sm border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm" required placeholder="Nama Jalan, RT/RW, Patokan gedung..."></textarea>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-gray-900 hover:bg-black text-white font-bold py-3 px-8 rounded-xl text-sm transition shadow-md w-full md:w-auto">Simpan Alamat Baru</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -146,13 +270,10 @@
         const selKecamatan = document.getElementById('kecamatan');
         const selKelurahan = document.getElementById('kelurahan');
 
-        // 1. Load Data Provinsi saat halaman dibuka
         fetch(`${endpoint}/provinces.json`)
             .then(response => response.json())
             .then(provinces => {
                 provinces.forEach(province => {
-                    // Kita simpan ID-nya di data-id untuk nge-fetch data anaknya nanti, 
-                    // tapi value yang dikirim ke database tetap nama provinsinya
                     let option = document.createElement('option');
                     option.value = province.name;
                     option.dataset.id = province.id;
@@ -161,7 +282,6 @@
                 });
             });
 
-        // 2. Saat Provinsi dipilih -> Load Kota
         selProvinsi.addEventListener('change', function() {
             selKota.innerHTML = '<option value="">Memuat...</option>';
             selKecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
@@ -176,7 +296,6 @@
                 .then(regencies => {
                     selKota.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>';
                     selKota.disabled = false;
-                    selKota.classList.remove('bg-gray-50');
                     regencies.forEach(regency => {
                         let option = document.createElement('option');
                         option.value = regency.name;
@@ -187,7 +306,6 @@
                 });
         });
 
-        // 3. Saat Kota dipilih -> Load Kecamatan
         selKota.addEventListener('change', function() {
             selKecamatan.innerHTML = '<option value="">Memuat...</option>';
             selKelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
@@ -201,7 +319,6 @@
                 .then(districts => {
                     selKecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
                     selKecamatan.disabled = false;
-                    selKecamatan.classList.remove('bg-gray-50');
                     districts.forEach(district => {
                         let option = document.createElement('option');
                         option.value = district.name;
@@ -212,7 +329,6 @@
                 });
         });
 
-        // 4. Saat Kecamatan dipilih -> Load Kelurahan
         selKecamatan.addEventListener('change', function() {
             selKelurahan.innerHTML = '<option value="">Memuat...</option>';
             selKelurahan.disabled = true;
@@ -225,7 +341,6 @@
                 .then(villages => {
                     selKelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
                     selKelurahan.disabled = false;
-                    selKelurahan.classList.remove('bg-gray-50');
                     villages.forEach(village => {
                         let option = document.createElement('option');
                         option.value = village.name;

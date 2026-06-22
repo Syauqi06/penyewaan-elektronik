@@ -42,7 +42,7 @@ class KatalogBarangResource extends Resource
                     ->numeric()
                     ->prefix('Rp'),
                 TextInput::make('harga_asli')
-                    ->label('Harga Asli Barang)')
+                    ->label('Harga Asli Barang')
                     ->required()
                     ->numeric()
                     ->prefix('Rp'),

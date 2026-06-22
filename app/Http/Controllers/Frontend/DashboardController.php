@@ -6,16 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AlamatUser;
+use App\Models\Peminjaman;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        // Ambil data alamat user
         $alamats = $user->alamat_users;
-        // Ambil data verifikasi identitas (jika ada)
         $verifikasi = $user->verifikasi_identitas;
+
+        $peminjamans = Peminjaman::with(['detail_peminjaman.unit_barang.katalog_barang', 'pembayaran'])
+                        ->where('user_id', $user->id)
+                        ->latest('tanggal_pesan')
+                        ->get();
 
         return view('frontend.dashboard', compact('user', 'alamats', 'verifikasi'));
     }
@@ -65,7 +69,6 @@ class DashboardController extends Controller
     public function storeKtp(Request $request)
     {
         $request->validate([
-            // Validasi file harus berupa gambar dengan ukuran maksimal 2MB
             'foto_ktp' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
         ]);
 
@@ -78,7 +81,7 @@ class DashboardController extends Controller
             [
                 'foto_ktp' => $path,
                 'status' => 'pending',
-                'catatan' => null // Kosongkan catatan penolakan sebelumnya jika ada
+                'catatan' => null 
             ]
         );
 
