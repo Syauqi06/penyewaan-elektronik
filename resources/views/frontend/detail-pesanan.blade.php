@@ -74,7 +74,7 @@
                     </div>
                 </div>
 
-                <div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
+                <div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-8">
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Rincian Pembayaran</p>
                     
                     <div class="space-y-2 mb-4 pb-4 border-b border-blue-200/50 text-sm">
@@ -98,7 +98,28 @@
                     </div>
                 </div>
 
-            </div>
+                @if($pesanan->pengembalian && $pesanan->pengembalian->status_refund === 'selesai')
+                <div class="bg-green-50/50 p-6 rounded-2xl border border-green-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-xs font-bold text-green-600 uppercase tracking-wider">Status Refund Deposit: Berhasil</p>
+                        <span class="bg-green-100 text-green-700 font-bold py-1 px-3 rounded-lg text-xs">Rp {{ number_format($pesanan->pengembalian->nominal_refund, 0, ',', '.') }}</span>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-16 h-16 bg-white rounded-xl border border-green-200 overflow-hidden flex-shrink-0 shadow-sm">
+                            <img src="{{ asset('storage/' . $pesanan->pengembalian->bukti_refund) }}" alt="Bukti Refund" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-grow">
+                            <p class="text-sm font-bold text-gray-900">Dana telah ditransfer kembali ke rekening Anda.</p>
+                            <p class="text-xs text-gray-500 mt-1">Sesuai dengan potongan pelunasan sewa dan denda (jika ada).</p>
+                        </div>
+                        <a href="{{ asset('storage/' . $pesanan->pengembalian->bukti_refund) }}" target="_blank" class="w-full sm:w-auto text-center bg-white border border-green-200 shadow-sm text-sm font-bold text-green-600 hover:text-green-800 hover:bg-green-50 py-2 px-4 rounded-xl transition">
+                            Lihat Bukti &rarr;
+                        </a>
+                    </div>
+                </div>
+                @endif
+                </div>
         </div>
     </div>
 </body>

@@ -15,10 +15,20 @@
     <nav class="bg-white shadow-sm py-4 px-6 md:px-10 flex justify-between items-center border-b border-gray-200 sticky top-0 z-50">
         <a href="{{ route('katalog.index') }}" class="text-2xl font-black text-blue-700 tracking-tight">Rental<span class="text-blue-400">.ly</span></a>
         <div class="flex items-center gap-6">
-            <a href="{{ route('katalog.index') }}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition">Kembali ke Katalog</a>
-            <form method="POST" action="{{ route('logout') }}" class="m-0">
+            <a href="{{ route('katalog.index') }}" class="text-sm font-bold text-gray-600 hover:text-blue-600 transition">
+                Kembali ke Katalog
+            </a>
+            
+            <a href="{{ route('profile.edit') }}" class="text-sm font-bold text-gray-600 hover:text-blue-600 transition flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                Pengaturan Profil
+            </a>
+
+            <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="text-sm font-bold bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 px-4 py-2 rounded-lg transition">Logout</button>
+                <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 px-4 rounded-xl text-sm transition">
+                    Logout
+                </button>
             </form>
         </div>
     </nav>
@@ -70,7 +80,7 @@
                     </div>
 
                     <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Status Identitas (KTP)</p>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Status Identitas</p>
                         
                         @if(!$verifikasi)
                             <div class="bg-red-50 border border-red-100 p-4 rounded-2xl">
@@ -99,6 +109,36 @@
                                 <a href="{{ route('ktp.upload') }}" class="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-2 rounded-xl text-sm block text-center transition">Upload Ulang</a>
                             </div>
                         @endif
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Rekening Pengembalian (Refund)</p>
+                        
+                        @if(auth()->user()->nama_bank && auth()->user()->nomor_rekening)
+                            <div class="flex items-center gap-3">
+                                <div class="bg-green-100 text-green-600 p-2 rounded-lg">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-900">{{ auth()->user()->nama_bank }} - {{ auth()->user()->nomor_rekening }}</p>
+                                    <p class="text-xs text-gray-500 uppercase">A.N: {{ auth()->user()->atas_nama_rekening }}</p>
+                                </div>
+                            </div>
+                        @else
+                            <div class="flex items-center gap-3">
+                                <div class="bg-red-100 text-red-600 p-2 rounded-lg">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                </div>
+                                <p class="text-sm text-red-600 font-medium">Rekening belum diatur.</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="mt-6">
+                        <a href="{{ route('profile.edit') }}" class="w-full flex justify-center items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 hover:text-blue-600 text-gray-700 font-bold py-2.5 px-4 rounded-xl transition duration-200 shadow-sm text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            Edit Profil & Rekening
+                        </a>
                     </div>
                 </div>
             </div>

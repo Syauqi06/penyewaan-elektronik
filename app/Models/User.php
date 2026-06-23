@@ -22,6 +22,9 @@ class User extends Authenticatable
         'email',
         'password',
         'telepon',
+        'nama_bank',
+        'nomor_rekening',
+        'atas_nama_rekening',
     ];
 
     /**

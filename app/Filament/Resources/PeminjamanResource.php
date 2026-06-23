@@ -77,11 +77,13 @@ class PeminjamanResource extends Resource
                     ->schema([
                         Select::make('status_peminjaman')
                             ->options([
-                                'pending'   => 'Menunggu Persetujuan',
-                                'disetujui' => 'Disetujui (Menunggu DP)',
-                                'ditolak'   => 'Ditolak',
-                                'aktif'     => 'Aktif (Barang Sedang Disewa)',
-                                'selesai'   => 'Selesai (Barang Telah Kembali)',
+                                'pending'            => 'Menunggu Persetujuan',
+                                'disetujui'          => 'Disetujui (Menunggu DP)',
+                                'ditolak'            => 'Ditolak',
+                                'aktif'              => 'Aktif (Barang Sedang Disewa)',
+                                'menunggu_refund'    => 'Menunggu Refund Deposit', // Tambahan Baru
+                                'menunggu_pelunasan' => 'Menunggu Pelunasan Sisa', // Tambahan Baru
+                                'selesai'            => 'Selesai (Barang Telah Kembali)',
                             ])
                             ->required()
                             ->native(false),
@@ -111,11 +113,13 @@ class PeminjamanResource extends Resource
                 TextColumn::make('status_peminjaman')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending'   => 'gray',
-                        'disetujui' => 'info',
-                        'ditolak'   => 'danger',
-                        'aktif'     => 'warning',
-                        'selesai'   => 'success',
+                        'pending'            => 'gray',
+                        'disetujui'          => 'info',
+                        'ditolak'            => 'danger',
+                        'aktif'              => 'warning',
+                        'menunggu_refund'    => 'warning', // Tambahan Baru
+                        'menunggu_pelunasan' => 'danger',  // Tambahan Baru
+                        'selesai'            => 'success',
                     }),
             ])
             ->defaultSort('created_at', 'desc')
@@ -123,10 +127,7 @@ class PeminjamanResource extends Resource
                 //
             ])
             ->actions([
-                // =========================================================
                 // ACTION 1: SERAHKAN BARANG
-                // FIX: Tidak perlu closure di ->form(), langsung array biasa
-                // =========================================================
                 Action::make('serahkanBarang')
                     ->label('Serahkan Barang')
                     ->icon('heroicon-o-truck')
@@ -142,7 +143,6 @@ class PeminjamanResource extends Resource
                             ->required(),
                     ])
                     ->action(function (array $data, $record): void {
-                        // FIX: FileUpload di Filament v3 return array, ambil item pertama
                         $foto = null;
                         if (!empty($data['foto_kondisi_awal'])) {
                             $foto = is_array($data['foto_kondisi_awal'])
@@ -170,34 +170,23 @@ class PeminjamanResource extends Resource
                     ->modalHeading('Penyerahan Barang ke Penyewa')
                     ->modalWidth('md'),
 
-                // =========================================================
-                // ACTION 2: PROSES PENGEMBALIAN
-                // FIX UTAMA: Placeholder dengan $record harus pakai
-                // ->mountUsing() agar data ter-inject ke form state dulu,
-                // baru dibaca oleh field. Ini mencegah Alpine dispatchEvent error.
-                // =========================================================
+                // ACTION 2: PROSES PENGEMBALIAN & HITUNG REFUND
                 Action::make('prosesPengembalian')
                     ->label('Terima Barang')
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
                     ->visible(fn ($record) => $record->status_peminjaman === 'aktif')
-                    // FIX: Inject data ke form state sebelum modal render
                     ->mountUsing(function ($form, $record) {
                         $tglRencana = Carbon::parse($record->tanggal_kembali_rencana);
                         $tglAktual  = Carbon::now();
-                        $hariTelat  = $tglAktual->gt($tglRencana)
-                            ? (int) $tglAktual->diffInDays($tglRencana)
-                            : 0;
+                        $hariTelat  = $tglAktual->gt($tglRencana) ? (int) $tglAktual->diffInDays($tglRencana) : 0;
 
-                        // Pre-fill form state, bukan closure di dalam field
                         $form->fill([
                             'info_keterlambatan' => "Jadwal: {$tglRencana->format('d M Y')} | Aktual: {$tglAktual->format('d M Y')} | Telat: {$hariTelat} Hari",
                             'denda_fisik'        => 0,
                         ]);
                     })
                     ->form([
-                        // FIX: Pakai TextInput disabled, bukan Placeholder dengan closure $record
-                        // Placeholder dengan closure $record menyebabkan Alpine error di Filament v3
                         TextInput::make('info_keterlambatan')
                             ->label('Log Keterlambatan (Otomatis)')
                             ->disabled()
@@ -228,14 +217,27 @@ class PeminjamanResource extends Resource
                     ->action(function (array $data, $record): void {
                         $tglRencana        = Carbon::parse($record->tanggal_kembali_rencana);
                         $tglAktual         = Carbon::now();
-                        $hariTelat         = $tglAktual->gt($tglRencana)
-                            ? (int) $tglAktual->diffInDays($tglRencana)
-                            : 0;
+                        $hariTelat         = $tglAktual->gt($tglRencana) ? (int) $tglAktual->diffInDays($tglRencana) : 0;
                         $tarifDendaPerHari = 50000;
                         $totalDendaTelat   = $hariTelat * $tarifDendaPerHari;
                         $totalDendaAkhir   = $totalDendaTelat + (int) $data['denda_fisik'];
 
-                        // FIX: Handle FileUpload nullable + bisa return array
+                        // 🔥 LOGIKA KALKULASI REFUND DEPOSIT 🔥
+                        $sisaSewaBelumDibayar = $record->total_biaya_sewa - $record->jumlah_dp;
+                        $totalPotongan        = $sisaSewaBelumDibayar + $totalDendaAkhir;
+                        $nominalRefund        = $record->jumlah_deposit - $totalPotongan;
+
+                        $statusPeminjaman = 'selesai';
+                        $statusRefund     = 'tidak_ada';
+
+                        if ($nominalRefund > 0) {
+                            $statusPeminjaman = 'menunggu_refund';
+                            $statusRefund     = 'menunggu';
+                        } elseif ($nominalRefund < 0) {
+                            $statusPeminjaman = 'menunggu_pelunasan';
+                        }
+
+                        // Handle Foto
                         $fotoKembali = null;
                         if (!empty($data['foto_kondisi_kembali'])) {
                             $fotoKembali = is_array($data['foto_kondisi_kembali'])
@@ -252,26 +254,89 @@ class PeminjamanResource extends Resource
                             'tarif_denda_per_hari'   => $tarifDendaPerHari,
                             'total_denda'            => $totalDendaAkhir,
                             'status_denda'           => $totalDendaAkhir > 0 ? 'belum_bayar' : 'tidak_ada',
+                            'nominal_refund'         => max(0, $nominalRefund), // Nilai ga boleh minus di kolom ini
+                            'status_refund'          => $statusRefund,
                             'catatan'                => $data['catatan'] ?? null,
                         ]);
 
-                        $record->update(['status_peminjaman' => 'selesai']);
+                        $record->update(['status_peminjaman' => $statusPeminjaman]);
 
-                        foreach ($record->detail_peminjaman as $detail) {
-                            if ($detail->unit_barang) {
-                                $detail->unit_barang->update(['status_ketersediaan' => 'tersedia']);
+                        // Bebaskan barang hanya kalau statusnya selesai atau nunggu refund
+                        if ($statusPeminjaman === 'menunggu_refund' || $statusPeminjaman === 'selesai') {
+                            foreach ($record->detail_peminjaman as $detail) {
+                                if ($detail->unit_barang) {
+                                    $detail->unit_barang->update(['status_ketersediaan' => 'tersedia']);
+                                }
                             }
                         }
 
                         Notification::make()
                             ->title('Barang Berhasil Dikembalikan!')
                             ->success()
-                            ->body('Unit barang sekarang sudah tersedia untuk disewa kembali.')
+                            ->body('Kalkulasi denda selesai. Silakan periksa status selanjutnya.')
                             ->send();
                     })
-                    ->requiresConfirmation(false) // FIX: Matikan dulu, konfirmasi + modal form bisa konflik
+                    ->requiresConfirmation(false)
                     ->modalHeading('Proses Pengembalian Barang')
                     ->modalWidth('2xl'),
+
+                // ACTION 3: KIRIM REFUND KE CUSTOMER
+                Action::make('kirimRefund')
+                    ->label('Kirim Refund')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('info')
+                    ->visible(fn ($record) => $record->status_peminjaman === 'menunggu_refund') 
+                    ->form([
+                        Placeholder::make('info_rekening')
+                            ->label('Informasi Transfer Customer')
+                            ->content(function ($record) {
+                                $user = $record->user;
+                                $refund = $record->pengembalian->nominal_refund ?? 0;
+                                // Desain nota simpel pakai inline-style biar 100% aman di Filament
+                                return new \Illuminate\Support\HtmlString("
+                                    <div style='padding: 1.5rem; background-color: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0;'>
+                                        <p style='font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;'>Bank Tujuan:</p>
+                                        <p style='font-weight: bold; font-size: 1.25rem; color: #0f172a; margin-bottom: 0.25rem;'>{$user->nama_bank} - {$user->nomor_rekening}</p>
+                                        <p style='font-weight: 600; font-size: 0.875rem; text-transform: uppercase; color: #475569;'>A.N: {$user->atas_nama_rekening}</p>
+                                        
+                                        <div style='margin-top: 1rem; padding-top: 1rem; border-top: 2px dashed #cbd5e1;'>
+                                            <p style='font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;'>Nominal Wajib Transfer:</p>
+                                            <p style='font-weight: 900; font-size: 1.875rem; color: #dc2626;'>Rp " . number_format($refund, 0, ',', '.') . "</p>
+                                        </div>
+                                    </div>
+                                ");
+                            })->columnSpanFull(),
+
+                        FileUpload::make('bukti_refund')
+                            ->label('Upload Bukti Transfer (Screenshot M-Banking)')
+                            ->directory('bukti_refund')
+                            ->image()
+                            ->imageEditor()
+                            ->required(),
+                    ])
+                    ->action(function (array $data, $record): void {
+                        $fotoRefund = null;
+                        if (!empty($data['bukti_refund'])) {
+                            $fotoRefund = is_array($data['bukti_refund'])
+                                ? collect($data['bukti_refund'])->first()
+                                : $data['bukti_refund'];
+                        }
+
+                        $record->pengembalian()->update([
+                            'bukti_refund' => $fotoRefund,
+                            'status_refund' => 'selesai',
+                        ]);
+
+                        $record->update(['status_peminjaman' => 'selesai']);
+
+                        Notification::make()
+                            ->title('Refund Berhasil Dikirim!')
+                            ->success()
+                            ->body('Status pesanan sekarang menjadi Selesai.')
+                            ->send();
+                    })
+                    ->modalHeading('Kirim Pengembalian Deposit')
+                    ->modalWidth('md'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

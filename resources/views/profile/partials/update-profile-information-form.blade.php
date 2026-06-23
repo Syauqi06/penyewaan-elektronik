@@ -47,6 +47,25 @@
             @endif
         </div>
 
+        <div class="mt-6 pt-6 border-t border-gray-100">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Rekening (Untuk Refund Deposit)</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <x-input-label for="nama_bank" value="Nama Bank (Cth: BCA, Mandiri)" />
+                    <x-text-input id="nama_bank" name="nama_bank" type="text" class="mt-1 block w-full" :value="old('nama_bank', $user->nama_bank)" />
+                </div>
+                <div>
+                    <x-input-label for="nomor_rekening" value="Nomor Rekening" />
+                    <x-text-input id="nomor_rekening" name="nomor_rekening" type="text" class="mt-1 block w-full" :value="old('nomor_rekening', $user->nomor_rekening)" />
+                </div>
+                <div class="md:col-span-2">
+                    <x-input-label for="atas_nama_rekening" value="Atas Nama (Pemilik Rekening)" />
+                    <x-text-input id="atas_nama_rekening" name="atas_nama_rekening" type="text" class="mt-1 block w-full" :value="old('atas_nama_rekening', $user->atas_nama_rekening)" />
+                </div>
+            </div>
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
