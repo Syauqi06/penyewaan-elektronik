@@ -22,8 +22,6 @@
                 <div class="hidden lg:flex items-center space-x-8">
                     <a href="{{ route('katalog.index') }}" class="text-gray-500 hover:text-gray-900 font-medium transition">Jelajah</a>
                     <a href="{{ route('kategori.index') }}" class="text-blue-700 font-semibold border-b-2 border-blue-700 pb-1">Kategori</a>
-                    <a href="#" class="text-gray-500 hover:text-gray-900 font-medium transition">Katalog</a>
-                    <a href="#" class="text-gray-500 hover:text-gray-900 font-medium transition">Bantuan</a>
                 </div>
 
                 <div class="flex items-center space-x-4">
