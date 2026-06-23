@@ -3,9 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UnitBarangResource\Pages;
-use App\Filament\Resources\UnitBarangResource\RelationManagers;
-use App\Models\UnitBarang;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -13,14 +10,14 @@ use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UnitBarangResource extends Resource
 {
-    protected static ?string $model = UnitBarang::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $modelLabel = 'Unit Barang';
+    protected static ?string $pluralModelLabel = 'Unit Barang';
+    protected static ?string $navigationGroup = 'Master Data';
+    protected static ?string $navigationIcon = 'heroicon-o-qr-code';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {

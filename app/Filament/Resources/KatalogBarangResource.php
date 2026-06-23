@@ -3,9 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\KatalogBarangResource\Pages;
-use App\Filament\Resources\KatalogBarangResource\RelationManagers;
-use App\Models\KatalogBarang;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
@@ -16,14 +13,14 @@ use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class KatalogBarangResource extends Resource
 {
-    protected static ?string $model = KatalogBarang::class;
-
+    protected static ?string $modelLabel = 'Katalog Barang';
+    protected static ?string $pluralModelLabel = 'Katalog Barang';
+    protected static ?string $navigationGroup = 'Master Data';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

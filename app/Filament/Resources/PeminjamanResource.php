@@ -24,12 +24,11 @@ use App\Models\Pengembalian;
 
 class PeminjamanResource extends Resource
 {
-    protected static ?string $model = Peminjaman::class;
-
     protected static ?string $modelLabel = 'Peminjaman';
     protected static ?string $pluralModelLabel = 'Peminjaman';
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Transaksi';
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
