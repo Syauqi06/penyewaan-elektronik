@@ -16,11 +16,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <div class="flex-shrink-0 flex items-center">
-                    <a href="{{ route('katalog.index') }}" class="text-2xl font-extrabold text-blue-700 tracking-tight">Rental.ly</a>
+                    <a href="{{ route('beranda') }}" class="text-2xl font-extrabold text-blue-700 tracking-tight">Rental.ly</a>
                 </div>
                 
                 <div class="hidden lg:flex items-center space-x-8">
-                    <a href="{{ route('katalog.index') }}" class="text-gray-500 hover:text-gray-900 font-medium transition">Jelajah</a>
+                    <a href="{{ route('beranda') }}" class="text-gray-500 hover:text-gray-900 font-medium transition">Beranda</a>
+                    <a href="{{ route('katalog.index') }}" class="text-gray-500 hover:text-gray-900 font-medium transition">Katalog Produk</a>
                     <a href="{{ route('kategori.index') }}" class="text-blue-700 font-semibold border-b-2 border-blue-700 pb-1">Kategori</a>
                 </div>
 
@@ -28,8 +29,8 @@
                     @auth
                         <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-blue-700 font-medium">Dashboard</a>
                     @else
-                        <a href="{{ route('login') }}" class="text-gray-600 hover:text-blue-700 font-medium hidden sm:block">Login</a>
-                        <a href="{{ route('register') }}" class="bg-blue-700 text-white px-5 py-2.5 rounded-full hover:bg-blue-800 font-semibold transition shadow-md shadow-blue-700/20">Sign Up</a>
+                        <a href="{{ route('login') }}" class="text-gray-600 hover:text-blue-700 font-medium hidden sm:block">Masuk</a>
+                        <a href="{{ route('register') }}" class="bg-blue-700 text-white px-5 py-2.5 rounded-xl hover:bg-blue-800 font-semibold transition shadow-md shadow-blue-700/20">Daftar</a>
                     @endauth
                 </div>
             </div>
@@ -63,9 +64,11 @@
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 mb-2 relative z-10">{{ $kat->nama_kategori }}</h3>
                         <p class="text-sm text-gray-500 mb-8 line-clamp-2 relative z-10">{{ $kat->deskripsi ?? 'Jelajahi koleksi terbaik kami untuk kategori ini.' }}</p>
-                        <a href="#" class="inline-flex items-center text-sm font-bold text-blue-600 group-hover:text-blue-700 relative z-10">
+                        
+                        <a href="{{ route('katalog.index', ['search' => $kat->nama_kategori]) }}" class="inline-flex items-center text-sm font-bold text-blue-600 group-hover:text-blue-700 relative z-10">
                             Lihat Koleksi <svg class="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                         </a>
+
                         <div class="absolute -bottom-6 -right-6 w-40 h-40 text-gray-50 opacity-[0.03] group-hover:opacity-[0.05] group-hover:scale-110 transition-all duration-500 pointer-events-none transform -rotate-12">
                             {!! $iconSvg !!}
                         </div>
