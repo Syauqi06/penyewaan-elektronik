@@ -111,33 +111,10 @@
                         @endif
                     </div>
 
-                    <div class="mt-6 pt-6 border-t border-gray-100">
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Rekening Pengembalian (Refund)</p>
-                        
-                        @if(auth()->user()->nama_bank && auth()->user()->nomor_rekening)
-                            <div class="flex items-center gap-3">
-                                <div class="bg-green-100 text-green-600 p-2 rounded-lg">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-gray-900">{{ auth()->user()->nama_bank }} - {{ auth()->user()->nomor_rekening }}</p>
-                                    <p class="text-xs text-gray-500 uppercase">A.N: {{ auth()->user()->atas_nama_rekening }}</p>
-                                </div>
-                            </div>
-                        @else
-                            <div class="flex items-center gap-3">
-                                <div class="bg-red-100 text-red-600 p-2 rounded-lg">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                </div>
-                                <p class="text-sm text-red-600 font-medium">Rekening belum diatur.</p>
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="mt-6">
+                    <div class="mt-6 border-t border-gray-100 pt-6">
                         <a href="{{ route('profile.edit') }}" class="w-full flex justify-center items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 hover:text-blue-600 text-gray-700 font-bold py-2.5 px-4 rounded-xl transition duration-200 shadow-sm text-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            Edit Profil & Rekening
+                            Edit Profil Akun
                         </a>
                     </div>
                 </div>
@@ -152,8 +129,8 @@
                         <div class="space-y-5">
                             @foreach($peminjamans as $pinjam)
                                 @php
-                                    // Ambil data pembayaran DP/Deposit yang mengandung Token Midtrans
-                                    $tagihanAwal = $pinjam->pembayaran->where('jenis_pembayaran', 'tagihan_awal')->first();
+                                    // UBAH: Ambil data pembayaran dengan jenis 'sewa'
+                                    $pembayaranSewa = $pinjam->pembayaran->where('jenis_pembayaran', 'sewa')->first();
                                 @endphp
                                 
                                 <div class="border border-gray-100 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition duration-300 bg-white">
@@ -176,7 +153,7 @@
                                             @endforeach
                                         </ul>
 
-                                        <p class="font-bold text-blue-600 text-lg">Rp {{ number_format($pinjam->jumlah_dp + $pinjam->jumlah_deposit, 0, ',', '.') }}</p>
+                                        <p class="font-bold text-blue-600 text-lg">Rp {{ number_format($pinjam->total_biaya_sewa, 0, ',', '.') }}</p>
                                     </div>
 
                                     <div class="w-full md:w-auto flex flex-col items-start md:items-end border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
@@ -184,17 +161,18 @@
                                             {{ $pinjam->status_peminjaman == 'pending' ? 'bg-yellow-100 text-yellow-700' : '' }}
                                             {{ $pinjam->status_peminjaman == 'disetujui' || $pinjam->status_peminjaman == 'selesai' ? 'bg-green-100 text-green-700' : '' }}
                                             {{ $pinjam->status_peminjaman == 'aktif' ? 'bg-blue-100 text-blue-700' : '' }}
-                                            {{ $pinjam->status_peminjaman == 'ditolak' ? 'bg-red-100 text-red-700' : '' }}
+                                            {{ $pinjam->status_peminjaman == 'menunggu_pelunasan' || $pinjam->status_peminjaman == 'ditolak' ? 'bg-red-100 text-red-700' : '' }}
                                         ">
-                                            {{ strtoupper($pinjam->status_peminjaman) }}
+                                            {{ strtoupper(str_replace('_', ' ', $pinjam->status_peminjaman)) }}
                                         </span>
                                         
-                                        @if($pinjam->status_peminjaman == 'pending' && $tagihanAwal && $tagihanAwal->snap_token)
-                                            <button onclick="payWithMidtrans('{{ $tagihanAwal->snap_token }}')" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-6 rounded-xl transition shadow-md shadow-blue-600/20">
+                                        @if($pinjam->status_peminjaman == 'pending' && $pembayaranSewa && $pembayaranSewa->snap_token)
+                                            <button onclick="payWithMidtrans('{{ $pembayaranSewa->snap_token }}')" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-6 rounded-xl transition shadow-md shadow-blue-600/20">
                                                 Bayar Sekarang
                                             </button>
                                         @else
-                                            <a href="{{ route('pesanan.show', $pinjam->id) }}" class="text-sm font-bold text-gray-600 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 px-5 py-2.5 rounded-xl transition">Detail Pesanan</a>                                        @endif
+                                            <a href="{{ route('pesanan.show', $pinjam->id) }}" class="text-sm font-bold text-gray-600 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 px-5 py-2.5 rounded-xl transition">Detail Pesanan</a>                                        
+                                        @endif
                                     </div>
 
                                 </div>

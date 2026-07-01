@@ -18,8 +18,6 @@ return new class extends Migration
             $table->date('tanggal_pesan');
             $table->date('tanggal_kembali_rencana');
             $table->bigInteger('total_biaya_sewa');
-            $table->bigInteger('jumlah_dp');
-            $table->bigInteger('jumlah_deposit');
             $table->string('foto_kondisi_awal')->nullable();
             $table->enum('status_peminjaman', ['pending', 'disetujui', 'ditolak', 'aktif', 'selesai'])->default('pending');
             $table->timestamps();

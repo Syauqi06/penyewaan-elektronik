@@ -48,7 +48,7 @@
         </div>
 
         <div class="mt-6 pt-6 border-t border-gray-100">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Rekening (Untuk Refund Deposit)</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Rekening</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

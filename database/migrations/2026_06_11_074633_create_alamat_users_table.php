@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('alamat_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('label_alamat'); // Contoh: Rumah, Kantor
+            $table->string('label_alamat');
             $table->string('provinsi');
             $table->string('kota_kabupaten');
             $table->string('kecamatan');

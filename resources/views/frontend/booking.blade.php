@@ -31,15 +31,16 @@
             <div class="w-full md:w-2/3">
 
                 @if ($errors->any())
-                            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 shadow-sm">
-                                <p class="font-bold mb-1">Terjadi Kesalahan:</p>
-                                <ul class="list-disc list-inside text-sm">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 shadow-sm">
+                        <p class="font-bold mb-1">Terjadi Kesalahan:</p>
+                        <ul class="list-disc list-inside text-sm">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                
                 <form action="{{ route('booking.store', $katalog->id) }}" method="POST" class="space-y-6">
                     @csrf
                     
@@ -80,24 +81,16 @@
                     </div>
 
                     <div class="bg-blue-50 p-4 rounded-lg mt-6 border border-blue-100">
-                        <h4 class="font-semibold text-blue-800 mb-3 text-sm">Rincian Biaya Otomatis</h4>
+                        <h4 class="font-semibold text-blue-800 mb-3 text-sm">Rincian Pembayaran</h4>
                         <div class="space-y-2 text-sm text-blue-900">
                             <div class="flex justify-between">
                                 <span>Durasi Sewa:</span>
                                 <span id="text_durasi" class="font-bold">0 Hari</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span>Total Biaya Sewa:</span>
-                                <span id="text_total_sewa" class="font-bold">Rp 0</span>
-                            </div>
-                            <div class="flex justify-between text-gray-500">
-                                <span>Deposit Keamanan (Dikembalikan di akhir):</span>
-                                <span id="text_deposit">Rp 300.000</span>
-                            </div>
                             <hr class="border-blue-200 my-2">
                             <div class="flex justify-between text-lg font-bold text-blue-700">
-                                <span>Total Bayar Awal (DP 50% + Deposit):</span>
-                                <span id="text_dp">Rp 0</span>
+                                <span>Total Dibayar Lunas:</span>
+                                <span id="text_total_biaya">Rp 0</span>
                             </div>
                         </div>
                     </div>
@@ -145,14 +138,9 @@
     </div>
 
     <script>
-        // Ambil nilai tanggal yang sudah dilempar dari controller
         const tglPesan = document.getElementById('tgl_pesan').value;
         const tglKembali = document.getElementById('tgl_kembali').value;
-        
-        // Di halaman checkout, kita bisa langsung mengambil harga dari PHP/Blade agar lebih aman
         const hargaPerHari = {{ $katalog->harga_sewa_per_hari }};
-        const hargaAsliBarang = {{ $katalog->harga_asli }};
-        const deposit = hargaAsliBarang * 0.3; // Deposit 30%
 
         const formatRupiah = (angka) => {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -168,18 +156,10 @@
                 
                 if(diffDays > 0) {
                     const totalSewa = diffDays * hargaPerHari;
-                    const jumlahDp = totalSewa * 0.5; // DP 50%
-                    const totalBayarSekarang = jumlahDp + deposit;
 
-                    // Update tampilan di layar
+                    // Langsung tembak ke durasi dan total biaya
                     document.getElementById('text_durasi').innerText = diffDays + ' Hari';
-                    document.getElementById('text_total_sewa').innerText = formatRupiah(totalSewa);
-                    document.getElementById('text_dp').innerText = formatRupiah(totalBayarSekarang);
-                    
-                    // Update deposit (kalau Anda memberikan id='text_deposit' di HTML rincian biayanya)
-                    if(document.getElementById('text_deposit')) {
-                        document.getElementById('text_deposit').innerText = formatRupiah(deposit);
-                    }
+                    document.getElementById('text_total_biaya').innerText = formatRupiah(totalSewa);
                 }
             }
         }

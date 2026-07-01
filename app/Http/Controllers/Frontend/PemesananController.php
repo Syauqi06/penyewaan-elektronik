@@ -73,7 +73,7 @@ class PemesananController extends Controller
             return redirect()->back()->withErrors(['pesan' => 'Mohon maaf, semua unit untuk barang ini sedang disewa.']);
         }
 
-        // 3. Kalkulasi Biaya
+        // 3. Kalkulasi Biaya (MURNI 100% SEWA)
         $tglPesan = Carbon::parse($request->tgl_pesan);
         $tglKembali = Carbon::parse($request->tgl_kembali);
         $durasiHari = $tglPesan->diffInDays($tglKembali);
@@ -83,9 +83,6 @@ class PemesananController extends Controller
         }
 
         $totalSewa = $durasiHari * $katalog->harga_sewa_per_hari;
-        $deposit = $katalog->harga_asli * 0.3;
-        $dpSewa = $totalSewa * 0.5;
-        $totalTagihanAwal = $dpSewa + $deposit;
 
         // 4. Simpan ke Tabel Peminjaman (Nota Induk)
         $peminjaman = Peminjaman::create([
@@ -94,9 +91,7 @@ class PemesananController extends Controller
             'tanggal_pesan' => $tglPesan->format('Y-m-d'),
             'tanggal_kembali_rencana' => $tglKembali->format('Y-m-d'),
             'total_biaya_sewa' => $totalSewa,
-            'jumlah_dp' => $dpSewa,
-            'jumlah_deposit' => $deposit,
-            'status_peminjaman' => 'pending',
+            'status_peminjaman' => 'pending', // Menunggu bayar lunas di depan
         ]);
 
         // 5. Simpan ke Tabel Detail Peminjaman
@@ -118,7 +113,7 @@ class PemesananController extends Controller
         $params = [
             'transaction_details' => [
                 'order_id' => $orderId,
-                'gross_amount' => (int) $totalTagihanAwal,
+                'gross_amount' => (int) $totalSewa, // Pembayaran Full
             ],
             'customer_details' => [
                 'first_name' => Auth::user()->name,
@@ -127,9 +122,9 @@ class PemesananController extends Controller
             'item_details' => [
                 [
                     'id' => $katalog->id,
-                    'price' => (int) $totalTagihanAwal,
+                    'price' => (int) $totalSewa,
                     'quantity' => 1,
-                    'name' => 'Tagihan Awal - ' . substr($katalog->nama_barang, 0, 30),
+                    'name' => 'Sewa ' . $durasiHari . ' Hari - ' . substr($katalog->nama_barang, 0, 20),
                 ]
             ]
         ];
@@ -138,11 +133,11 @@ class PemesananController extends Controller
             // Ambil Token dari Midtrans
             $snapToken = \Midtrans\Snap::getSnapToken($params);
 
-            // Buat data tagihan di tabel Pembayaran dengan snap_token
+            // Buat data tagihan di tabel Pembayaran
             Pembayaran::create([
                 'peminjaman_id' => $peminjaman->id,
-                'jumlah_bayar' => $totalTagihanAwal,
-                'jenis_pembayaran' => 'tagihan_awal',
+                'jumlah_bayar' => $totalSewa,
+                'jenis_pembayaran' => 'sewa', // Ubah jadi 'sewa'
                 'kode_transaksi_gateway' => $orderId,
                 'snap_token' => $snapToken,
                 'status_pembayaran' => 'pending',

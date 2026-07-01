@@ -17,9 +17,10 @@ use App\Http\Controllers\Frontend\MidtransController;
 // ==========================================
 // 1. ROUTE PUBLIC (Tidak butuh login)
 // ==========================================
-Route::get('/', [KatalogController::class, 'index'])->name('katalog.index');
-Route::get('/kategori', [KatalogController::class, 'kategori'])->name('kategori.index');
+Route::get('/', [KatalogController::class, 'beranda'])->name('beranda');
+Route::get('/katalog', [KatalogController::class, 'index'])->name('katalog.index');
 Route::get('/katalog/{id}', [KatalogController::class, 'show'])->name('katalog.show');
+Route::get('/kategori', [KatalogController::class, 'kategori'])->name('kategori.index');
 
 // ==========================================
 // 2. ROUTE AUTH GOOGLE

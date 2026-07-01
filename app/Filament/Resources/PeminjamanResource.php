@@ -17,7 +17,6 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Placeholder;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use App\Models\Pengembalian;
@@ -39,38 +38,23 @@ class PeminjamanResource extends Resource
                         Select::make('user_id')
                             ->relationship('user', 'name')
                             ->label('Nama Penyewa')
-                            ->disabled()
-                            ->required(),
+                            ->disabled(),
                         Select::make('alamat_user_id')
                             ->relationship('alamat_user', 'label_alamat')
                             ->label('Alamat Pengiriman')
-                            ->disabled()
-                            ->required(),
+                            ->disabled(),
                     ])->columns(2),
 
                 Section::make('Detail Waktu & Biaya')
                     ->schema([
                         DatePicker::make('tanggal_pesan')
-                            ->disabled()
-                            ->required(),
+                            ->disabled(),
                         DatePicker::make('tanggal_kembali_rencana')
-                            ->disabled()
-                            ->required(),
+                            ->disabled(),
                         TextInput::make('total_biaya_sewa')
                             ->numeric()
                             ->prefix('Rp')
-                            ->disabled()
-                            ->required(),
-                        TextInput::make('jumlah_dp')
-                            ->numeric()
-                            ->prefix('Rp')
-                            ->disabled()
-                            ->required(),
-                        TextInput::make('jumlah_deposit')
-                            ->numeric()
-                            ->prefix('Rp')
-                            ->disabled()
-                            ->required(),
+                            ->disabled(),
                     ])->columns(3),
 
                 Section::make('Kontrol Status Transaksi')
@@ -78,11 +62,10 @@ class PeminjamanResource extends Resource
                         Select::make('status_peminjaman')
                             ->options([
                                 'pending'            => 'Menunggu Persetujuan',
-                                'disetujui'          => 'Disetujui (Menunggu DP)',
+                                'disetujui'          => 'Disetujui (Sudah Lunas)',
                                 'ditolak'            => 'Ditolak',
                                 'aktif'              => 'Aktif (Barang Sedang Disewa)',
-                                'menunggu_refund'    => 'Menunggu Refund Deposit', // Tambahan Baru
-                                'menunggu_pelunasan' => 'Menunggu Pelunasan Sisa', // Tambahan Baru
+                                'menunggu_pelunasan' => 'Menunggu Pelunasan Denda',
                                 'selesai'            => 'Selesai (Barang Telah Kembali)',
                             ])
                             ->required()
@@ -117,9 +100,9 @@ class PeminjamanResource extends Resource
                         'disetujui'          => 'info',
                         'ditolak'            => 'danger',
                         'aktif'              => 'warning',
-                        'menunggu_refund'    => 'warning', // Tambahan Baru
-                        'menunggu_pelunasan' => 'danger',  // Tambahan Baru
+                        'menunggu_pelunasan' => 'danger',
                         'selesai'            => 'success',
+                        default              => 'gray',
                     }),
             ])
             ->defaultSort('created_at', 'desc')
@@ -170,7 +153,7 @@ class PeminjamanResource extends Resource
                     ->modalHeading('Penyerahan Barang ke Penyewa')
                     ->modalWidth('md'),
 
-                // ACTION 2: PROSES PENGEMBALIAN & HITUNG REFUND
+                // ACTION 2: PROSES PENGEMBALIAN & HITUNG DENDA (MURNI TANPA REFUND)
                 Action::make('prosesPengembalian')
                     ->label('Terima Barang')
                     ->icon('heroicon-o-check-badge')
@@ -222,20 +205,8 @@ class PeminjamanResource extends Resource
                         $totalDendaTelat   = $hariTelat * $tarifDendaPerHari;
                         $totalDendaAkhir   = $totalDendaTelat + (int) $data['denda_fisik'];
 
-                        // 🔥 LOGIKA KALKULASI REFUND DEPOSIT 🔥
-                        $sisaSewaBelumDibayar = $record->total_biaya_sewa - $record->jumlah_dp;
-                        $totalPotongan        = $sisaSewaBelumDibayar + $totalDendaAkhir;
-                        $nominalRefund        = $record->jumlah_deposit - $totalPotongan;
-
-                        $statusPeminjaman = 'selesai';
-                        $statusRefund     = 'tidak_ada';
-
-                        if ($nominalRefund > 0) {
-                            $statusPeminjaman = 'menunggu_refund';
-                            $statusRefund     = 'menunggu';
-                        } elseif ($nominalRefund < 0) {
-                            $statusPeminjaman = 'menunggu_pelunasan';
-                        }
+                        // Tentukan status selanjutnya (Selesai, atau Menunggu Pelunasan Denda)
+                        $statusPeminjaman = $totalDendaAkhir > 0 ? 'menunggu_pelunasan' : 'selesai';
 
                         // Handle Foto
                         $fotoKembali = null;
@@ -245,6 +216,7 @@ class PeminjamanResource extends Resource
                                 : $data['foto_kondisi_kembali'];
                         }
 
+                        // Simpan log pengembalian (Sesuai dengan tabel database baru kita)
                         Pengembalian::create([
                             'peminjaman_id'          => $record->id,
                             'tanggal_kembali_aktual' => $tglAktual->format('Y-m-d'),
@@ -254,89 +226,27 @@ class PeminjamanResource extends Resource
                             'tarif_denda_per_hari'   => $tarifDendaPerHari,
                             'total_denda'            => $totalDendaAkhir,
                             'status_denda'           => $totalDendaAkhir > 0 ? 'belum_bayar' : 'tidak_ada',
-                            'nominal_refund'         => max(0, $nominalRefund), // Nilai ga boleh minus di kolom ini
-                            'status_refund'          => $statusRefund,
                             'catatan'                => $data['catatan'] ?? null,
                         ]);
 
                         $record->update(['status_peminjaman' => $statusPeminjaman]);
 
-                        // Bebaskan barang hanya kalau statusnya selesai atau nunggu refund
-                        if ($statusPeminjaman === 'menunggu_refund' || $statusPeminjaman === 'selesai') {
-                            foreach ($record->detail_peminjaman as $detail) {
-                                if ($detail->unit_barang) {
-                                    $detail->unit_barang->update(['status_ketersediaan' => 'tersedia']);
-                                }
+                        // Bebaskan barang karena unit sudah balik secara fisik
+                        foreach ($record->detail_peminjaman as $detail) {
+                            if ($detail->unit_barang) {
+                                $detail->unit_barang->update(['status_ketersediaan' => 'tersedia']);
                             }
                         }
 
                         Notification::make()
                             ->title('Barang Berhasil Dikembalikan!')
                             ->success()
-                            ->body('Kalkulasi denda selesai. Silakan periksa status selanjutnya.')
+                            ->body($totalDendaAkhir > 0 ? 'Ada denda yang harus dilunasi penyewa.' : 'Transaksi telah selesai sepenuhnya.')
                             ->send();
                     })
                     ->requiresConfirmation(false)
                     ->modalHeading('Proses Pengembalian Barang')
                     ->modalWidth('2xl'),
-
-                // ACTION 3: KIRIM REFUND KE CUSTOMER
-                Action::make('kirimRefund')
-                    ->label('Kirim Refund')
-                    ->icon('heroicon-o-banknotes')
-                    ->color('info')
-                    ->visible(fn ($record) => $record->status_peminjaman === 'menunggu_refund') 
-                    ->form([
-                        Placeholder::make('info_rekening')
-                            ->label('Informasi Transfer Customer')
-                            ->content(function ($record) {
-                                $user = $record->user;
-                                $refund = $record->pengembalian->nominal_refund ?? 0;
-                                // Desain nota simpel pakai inline-style biar 100% aman di Filament
-                                return new \Illuminate\Support\HtmlString("
-                                    <div style='padding: 1.5rem; background-color: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0;'>
-                                        <p style='font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;'>Bank Tujuan:</p>
-                                        <p style='font-weight: bold; font-size: 1.25rem; color: #0f172a; margin-bottom: 0.25rem;'>{$user->nama_bank} - {$user->nomor_rekening}</p>
-                                        <p style='font-weight: 600; font-size: 0.875rem; text-transform: uppercase; color: #475569;'>A.N: {$user->atas_nama_rekening}</p>
-                                        
-                                        <div style='margin-top: 1rem; padding-top: 1rem; border-top: 2px dashed #cbd5e1;'>
-                                            <p style='font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;'>Nominal Wajib Transfer:</p>
-                                            <p style='font-weight: 900; font-size: 1.875rem; color: #dc2626;'>Rp " . number_format($refund, 0, ',', '.') . "</p>
-                                        </div>
-                                    </div>
-                                ");
-                            })->columnSpanFull(),
-
-                        FileUpload::make('bukti_refund')
-                            ->label('Upload Bukti Transfer (Screenshot M-Banking)')
-                            ->directory('bukti_refund')
-                            ->image()
-                            ->imageEditor()
-                            ->required(),
-                    ])
-                    ->action(function (array $data, $record): void {
-                        $fotoRefund = null;
-                        if (!empty($data['bukti_refund'])) {
-                            $fotoRefund = is_array($data['bukti_refund'])
-                                ? collect($data['bukti_refund'])->first()
-                                : $data['bukti_refund'];
-                        }
-
-                        $record->pengembalian()->update([
-                            'bukti_refund' => $fotoRefund,
-                            'status_refund' => 'selesai',
-                        ]);
-
-                        $record->update(['status_peminjaman' => 'selesai']);
-
-                        Notification::make()
-                            ->title('Refund Berhasil Dikirim!')
-                            ->success()
-                            ->body('Status pesanan sekarang menjadi Selesai.')
-                            ->send();
-                    })
-                    ->modalHeading('Kirim Pengembalian Deposit')
-                    ->modalWidth('md'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

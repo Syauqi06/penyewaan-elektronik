@@ -27,7 +27,7 @@ class MidtransController extends Controller
         $transaction = $notif->transaction_status;
         $type = $notif->payment_type;
         $orderId = $notif->order_id;
-        $donation = $notif->fraud_status;
+        $fraudStatus = $notif->fraud_status;
 
         // 4. Cari data Pembayaran di database berdasarkan Order ID Midtrans
         $pembayaran = Pembayaran::where('kode_transaksi_gateway', $orderId)->first();
@@ -49,10 +49,10 @@ class MidtransController extends Controller
                 'tanggal_bayar' => Carbon::now()
             ]);
 
-            // Jika yang lunas adalah DP/Tagihan Awal, ubah status peminjaman jadi 'disetujui'
-            if ($pembayaran->jenis_pembayaran == 'tagihan_awal') {
+            // Karena sekarang bayar full di depan, jenis pembayarannya adalah 'sewa'
+            if ($pembayaran->jenis_pembayaran == 'sewa') {
                 $peminjaman->update([
-                    'status_peminjaman' => 'disetujui' // Sesuai enum lu ['pending', 'disetujui', ...]
+                    'status_peminjaman' => 'disetujui' // Artinya: Disetujui (Sudah Lunas)
                 ]);
             }
 

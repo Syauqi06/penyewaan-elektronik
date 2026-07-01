@@ -87,18 +87,14 @@
 
                         <div class="space-y-3 text-sm text-gray-600 mb-6 bg-blue-50/50 p-4 rounded-xl border border-blue-50">
                             <div class="flex justify-between">
-                                <span>Biaya Sewa (<span id="text_durasi">0 Hari</span>)</span>
-                                <span id="text_total_sewa" class="font-medium text-gray-900">Rp 0</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Deposit Jaminan (Aman)</span>
-                                <span id="text_deposit" class="font-medium text-gray-900">Rp 0</span>
+                                <span>Durasi Sewa:</span>
+                                <span id="text_durasi" class="font-medium text-gray-900">0 Hari</span>
                             </div>
                             <div class="pt-3 border-t border-blue-100 flex justify-between items-center mt-2">
-                                <span class="font-bold text-gray-900">Estimasi Total Awal</span>
-                                <span id="text_dp" class="text-lg font-bold text-blue-600">Rp 0</span>
+                                <span class="font-bold text-gray-900">Total Dibayar Lunas</span>
+                                <span id="text_total_biaya" class="text-lg font-bold text-blue-600">Rp 0</span>
                             </div>
-                            <p class="text-[10px] text-gray-400 text-right mt-1">*Total estimasi termasuk DP Sewa 50% & Deposit</p>
+                            <p class="text-[10px] text-gray-400 text-right mt-1">*Pembayaran dilakukan secara penuh (100%) via Midtrans.</p>
                         </div>
 
                         @if($katalog->stok_tersedia > 0)
@@ -126,8 +122,6 @@
         const tglPesan = document.getElementById('tgl_pesan');
         const tglKembali = document.getElementById('tgl_kembali');
         const hargaPerHari = parseInt(document.getElementById('hargaPerHari').getAttribute('data-harga'));
-        const hargaAsliBarang = parseInt(document.getElementById('hargaPerHari').getAttribute('data-harga-asli'));
-        const deposit = hargaAsliBarang * 0.3; 
 
         // Gembok input manual dari keyboard
         tglPesan.addEventListener('keydown', (e) => e.preventDefault());
@@ -138,10 +132,9 @@
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         }
 
-        // Tampilkan Deposit Awal dan set minimal tanggal mulai (Hari Ini)
+        // Tampilkan estimasi awal dan set minimal tanggal mulai (Hari Ini)
         const today = new Date().toISOString().split('T')[0];
         tglPesan.setAttribute('min', today);
-        document.getElementById('text_deposit').innerText = formatRupiah(deposit);
 
         // Atur Gembok Tanggal Selesai otomatis setiap kali Tanggal Mulai dipilih
         tglPesan.addEventListener('change', function() {
@@ -173,17 +166,13 @@
                 
                 if(diffDays > 0) {
                     const totalSewa = diffDays * hargaPerHari;
-                    const jumlahDp = totalSewa * 0.5; // DP 50%
-                    const totalBayarSekarang = jumlahDp + deposit; // Total tagihan awal
 
                     document.getElementById('text_durasi').innerText = diffDays + ' Hari';
-                    document.getElementById('text_total_sewa').innerText = formatRupiah(totalSewa);
-                    document.getElementById('text_dp').innerText = formatRupiah(totalBayarSekarang);
+                    document.getElementById('text_total_biaya').innerText = formatRupiah(totalSewa);
                 }
             } else {
                 document.getElementById('text_durasi').innerText = '0 Hari';
-                document.getElementById('text_total_sewa').innerText = 'Rp 0';
-                document.getElementById('text_dp').innerText = 'Rp 0';
+                document.getElementById('text_total_biaya').innerText = 'Rp 0';
             }
         }
     </script>

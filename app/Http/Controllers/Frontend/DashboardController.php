@@ -27,16 +27,17 @@ class DashboardController extends Controller
 
         foreach ($peminjamans as $pinjam) {
             if ($pinjam->status_peminjaman == 'pending') {
-                $tagihanAwal = $pinjam->pembayaran->where('jenis_pembayaran', 'tagihan_awal')->first();
+                // UBAH: Cari pembayaran dengan jenis 'sewa' (bukan tagihan_awal lagi)
+                $pembayaranSewa = $pinjam->pembayaran->where('jenis_pembayaran', 'sewa')->first();
 
                 // Pastikan ada Order ID (kode_transaksi_gateway)
-                if ($tagihanAwal && $tagihanAwal->kode_transaksi_gateway) {
+                if ($pembayaranSewa && $pembayaranSewa->kode_transaksi_gateway) {
                     try {
-                        $midtransStatus = (object) \Midtrans\Transaction::status($tagihanAwal->kode_transaksi_gateway);
+                        $midtransStatus = (object) \Midtrans\Transaction::status($pembayaranSewa->kode_transaksi_gateway);
 
                         if ($midtransStatus->transaction_status == 'settlement' || $midtransStatus->transaction_status == 'capture') {
                             
-                            $tagihanAwal->update([
+                            $pembayaranSewa->update([
                                 'status_pembayaran' => 'settlement',
                                 'metode_pembayaran' => $midtransStatus->payment_type ?? 'transfer',
                                 'tanggal_bayar' => \Carbon\Carbon::now()
@@ -49,6 +50,7 @@ class DashboardController extends Controller
                             $pinjam->status_peminjaman = 'disetujui';
                         }
                     } catch (\Exception $e) {
+                        // Abaikan jika tidak bisa connect ke Midtrans, biarkan tetap pending
                     }
                 }
             }
