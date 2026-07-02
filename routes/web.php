@@ -57,6 +57,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    Route::get('/midtrans/check-status/{order_id}', [MidtransController::class, 'checkStatus'])->name('midtrans.check-status');
+    
+    Route::post('/dashboard/pesanan/{id}/kembali', [DashboardController::class, 'prosesKembalikanBarang'])->name('pesanan.kembali');
+    Route::post('/pesanan/{id}/bayar-denda', [PemesananController::class, 'bayarDenda'])->name('pesanan.bayar-denda');
+
+    Route::post('/pesanan/{id}/kembalikan', [PemesananController::class, 'kembalikanBarang'])->name('pesanan.kembalikan');
+
 });
 
 require __DIR__.'/auth.php';

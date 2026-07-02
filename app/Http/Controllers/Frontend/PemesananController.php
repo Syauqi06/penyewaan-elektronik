@@ -137,26 +137,108 @@ class PemesananController extends Controller
             Pembayaran::create([
                 'peminjaman_id' => $peminjaman->id,
                 'jumlah_bayar' => $totalSewa,
-                'jenis_pembayaran' => 'sewa', // Ubah jadi 'sewa'
                 'kode_transaksi_gateway' => $orderId,
                 'snap_token' => $snapToken,
                 'status_pembayaran' => 'pending',
             ]);
 
         } catch (\Exception $e) {
-            // Jika API Midtrans bermasalah, hapus instansi peminjaman agar tidak gantung, lalu tampilkan error
             $peminjaman->delete();
             return redirect()->back()->withErrors(['pesan' => 'Gagal menghubungkan ke payment gateway Midtrans: ' . $e->getMessage()]);
         }
 
-        // 7. Kunci (Booking) Unit Barang tersebut agar statusnya berubah
-        $unitBarang->update([
-            'status_ketersediaan' => 'disewa'
-        ]);
-
-        // Bersihkan session data booking tanggal
+        $unitBarang->update(['status_ketersediaan' => 'disewa']);
         session()->forget(['booking_tgl_pesan', 'booking_tgl_kembali']);
 
-        return redirect()->route('dashboard')->with('success', 'Hore! Pesanan berhasil dibuat. Silakan cek dashboard Anda untuk menyelesaikan pembayaran.');
+        return view('frontend.payment', [
+            'snapToken' => $snapToken,
+            'peminjamanId' => $peminjaman->id
+        ]);
+    }
+
+    public function bayarDenda(int $id)
+    {
+        $pesanan = \App\Models\Peminjaman::with('pengembalian')->findOrFail($id);
+        
+        if ($pesanan->status_peminjaman !== 'menunggu_pelunasan') {
+            return redirect()->back()->withErrors(['pesan' => 'Pesanan tidak dalam status menunggu pelunasan.']);
+        }
+
+        $totalDenda = $pesanan->pengembalian->total_denda;
+        $orderId = 'DNDA-' . $pesanan->id . '-' . time();
+
+        // Setup Midtrans
+        \Midtrans\Config::$serverKey = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $totalDenda,
+            ],
+            'customer_details' => [
+                'first_name' => auth()->user()->name,
+                'email' => auth()->user()->email,
+            ],
+        ];
+
+        $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+        // Simpan record pembayaran baru untuk denda
+        \App\Models\Pembayaran::create([
+            'peminjaman_id' => $pesanan->id,
+            'jumlah_bayar' => $totalDenda,
+            'kode_transaksi_gateway' => $orderId,
+            'snap_token' => $snapToken,
+            'status_pembayaran' => 'pending',
+        ]);
+
+        return view('frontend.payment', [
+            'snapToken' => $snapToken,
+            'peminjamanId' => $pesanan->id
+        ]);
+    }
+
+    public function kembalikanBarang(Request $request, int $id)
+    {
+        $request->validate([
+            'tanggal_kembali' => 'required|date',
+            'kondisi_barang' => 'required|in:baik,rusak_ringan,rusak_berat',
+            'foto_pengembalian' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+        ]);
+
+        $peminjaman = Peminjaman::with('detail_peminjaman.unit_barang.katalog_barang')->findOrFail($id);
+
+        // Upload foto
+        $fotoPath = null;
+        if ($request->hasFile('foto_pengembalian')) {
+            $fotoPath = $request->file('foto_pengembalian')->store('pengembalian', 'public');
+        }
+
+        $tanggalKembali = Carbon::parse($request->tanggal_kembali);
+        $tanggalRencana = Carbon::parse($peminjaman->tanggal_kembali_rencana);
+        $hariTelat = 0;
+
+        if ($tanggalKembali->gt($tanggalRencana)) {
+            $hariTelat = $tanggalRencana->diffInDays($tanggalKembali);
+        }
+
+        $tarifDendaPerHari = $peminjaman->detail_peminjaman->first()->unit_barang->katalog_barang->tarif_denda_per_hari ?? 0;
+
+        $peminjaman->pengembalian()->create([
+            'tanggal_kembali_aktual' => $tanggalKembali,
+            'kondisi_barang_kembali' => $request->kondisi_barang,
+            'foto_kondisi_kembali' => $fotoPath,
+            'jumlah_hari_telat' => $hariTelat,
+            'tarif_denda_per_hari' => $tarifDendaPerHari,
+            'total_denda' => 0, // Admin yang akan hitung final denda
+            'status_denda' => 'menunggu_verifikasi', // Status baru
+            'catatan' => null, // Admin yang akan isi catatan
+        ]);
+
+        $peminjaman->update(['status_peminjaman' => 'menunggu_pengecekan']);
+
+        return redirect()->route('pesanan.show', $peminjaman->id)
+            ->with('success', 'Pengembalian barang berhasil dikirim. Menunggu verifikasi dari admin.');
     }
 }

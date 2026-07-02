@@ -27,6 +27,10 @@ class BarangSeeder extends Seeder
             ['nama_kategori' => 'Gaming'],
             ['deskripsi' => 'Konsol game masa kini untuk hiburan maksimal di akhir pekan.']
         );
+        $kategoriHandphone = Kategori::firstOrCreate(
+            ['nama_kategori' => 'Handphone'],
+            ['deskripsi' => 'Smartphone flagship terbaru dari berbagai merek ternama untuk kebutuhan harian, konten kreator, dan profesional.']
+        );  
 
         // 2. DATA DUMMY BARANG
         $daftarBarang = [
@@ -77,6 +81,54 @@ class BarangSeeder extends Seeder
                 'harga_asli' => 5500000,
                 'harga_sewa_per_hari' => 80000,
                 'jumlah_unit' => 3
+            ],
+            [
+                'kategori_id' => $kategoriHandphone->id,
+                'nama_barang' => 'iPhone 15 Pro Max 256GB',
+                'deskripsi' => 'Flagship Apple dengan chip A17 Pro, bodi titanium, dan kamera 48MP dengan zoom optik 5x. Cocok untuk konten kreator profesional.',
+                'harga_asli' => 22000000,
+                'harga_sewa_per_hari' => 200000,
+                'jumlah_unit' => 4
+            ],
+            [
+                'kategori_id' => $kategoriHandphone->id,
+                'nama_barang' => 'iPhone 14 Pro 128GB',
+                'deskripsi' => 'iPhone dengan Dynamic Island dan kamera 48MP. Performa masih sangat kencang untuk daily driver maupun editing mobile.',
+                'harga_asli' => 17000000,
+                'harga_sewa_per_hari' => 150000,
+                'jumlah_unit' => 3
+            ],
+            [
+                'kategori_id' => $kategoriHandphone->id,
+                'nama_barang' => 'Samsung Galaxy S24 Ultra 256GB',
+                'deskripsi' => 'HP Android terbaik dari Samsung dengan S Pen built-in, kamera 200MP, dan Galaxy AI. Performa setara laptop untuk produktivitas.',
+                'harga_asli' => 21000000,
+                'harga_sewa_per_hari' => 180000,
+                'jumlah_unit' => 3
+            ],
+            [
+                'kategori_id' => $kategoriHandphone->id,
+                'nama_barang' => 'Samsung Galaxy Z Fold 5',
+                'deskripsi' => 'HP lipat flagship dengan layar Dynamic AMOLED 2X 7.6 inch. Bisa jadi tablet dan HP dalam satu device. Cocok untuk multitasking.',
+                'harga_asli' => 27000000,
+                'harga_sewa_per_hari' => 250000,
+                'jumlah_unit' => 2
+            ],
+            [
+                'kategori_id' => $kategoriHandphone->id,
+                'nama_barang' => 'Xiaomi 14 Ultra',
+                'deskripsi' => 'Flagship Xiaomi dengan kamera Leica Summilux dan sensor 1-inch. Hasil foto setara kamera profesional dengan harga sewa terjangkau.',
+                'harga_asli' => 16000000,
+                'harga_sewa_per_hari' => 130000,
+                'jumlah_unit' => 3
+            ],
+            [
+                'kategori_id' => $kategoriHandphone->id,
+                'nama_barang' => 'Google Pixel 8 Pro',
+                'deskripsi' => 'HP Google dengan kamera AI terbaik di kelasnya dan Android stock murni. Cocok untuk yang suka foto computational photography.',
+                'harga_asli' => 15000000,
+                'harga_sewa_per_hari' => 120000,
+                'jumlah_unit' => 2
             ],
         ];
 

@@ -14,10 +14,7 @@ return new class extends Migration
         Schema::create('pembayaran', function (Blueprint $table) {
             $table->id();
             $table->foreignId('peminjaman_id')->constrained('peminjaman')->onDelete('cascade');
-            $table->bigInteger('jumlah_bayar');
-            
-            $table->enum('jenis_pembayaran', ['tagihan_awal', 'pelunasan', 'denda']); 
-            
+            $table->bigInteger('jumlah_bayar');            
             $table->string('metode_pembayaran')->nullable(); 
             $table->string('kode_transaksi_gateway')->nullable(); // Order ID Midtrans
             $table->string('snap_token')->nullable(); // Token untuk manggil popup Midtrans

@@ -28,8 +28,7 @@ class DashboardController extends Controller
         foreach ($peminjamans as $pinjam) {
             if ($pinjam->status_peminjaman == 'pending') {
                 // UBAH: Cari pembayaran dengan jenis 'sewa' (bukan tagihan_awal lagi)
-                $pembayaranSewa = $pinjam->pembayaran->where('jenis_pembayaran', 'sewa')->first();
-
+                $pembayaranSewa = $pinjam->pembayaran->first();
                 // Pastikan ada Order ID (kode_transaksi_gateway)
                 if ($pembayaranSewa && $pembayaranSewa->kode_transaksi_gateway) {
                     try {
@@ -130,5 +129,32 @@ class DashboardController extends Controller
                     ->findOrFail($id);
 
         return view('frontend.detail-pesanan', compact('pesanan'));
+    }
+
+    public function prosesKembalikanBarang(Request $request, int $id)
+    {
+        $request->validate([
+            'foto_pengembalian' => 'required|image|mimes:jpeg,png,jpg|max:3072', // Maksimal 3MB
+        ]);
+
+        // Cari data pesanan yang lagi Aktif
+        $pesanan = \App\Models\Peminjaman::where('user_id', Auth::id())
+                    ->where('id', $id)
+                    ->firstOrFail();
+
+        if ($pesanan->status_peminjaman !== 'aktif') {
+            return redirect()->back()->withErrors(['pesan' => 'Barang ini belum aktif disewa atau sudah dikembalikan.']);
+        }
+
+        // Simpan foto bukti
+        $path = $request->file('foto_pengembalian')->store('pengembalian', 'public');
+
+        // Update status pesanan
+        $pesanan->update([
+            'foto_pengembalian' => $path,
+            'status_peminjaman' => 'menunggu_pengecekan'
+        ]);
+
+        return redirect()->back()->with('success', 'Bukti pengembalian berhasil dikirim! Menunggu pengecekan fisik oleh Admin.');
     }
 }
